@@ -13,13 +13,14 @@ from pages.quiz       import page_quiz, handle_quiz_answer
 from pages.resultado  import page_resultado
 
 st.set_page_config(
-    page_title="FICA ESPERTO",
+    page_title="FIQUE LIGADO",
     page_icon="🛡️",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
 
 st.markdown("""
+<meta name="viewport" content="width=450, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
     .stApp { background-color: #1a73e8 !important; }
     .block-container {
