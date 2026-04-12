@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from pages.utils import img_src
 
 
@@ -9,108 +10,118 @@ def page_welcome() -> None:
         st.session_state.input_error = False
 
     border_color = '#ff7a6c' if st.session_state.input_error else '#1a73e8'
+    warning_display = 'block' if st.session_state.input_error else 'none'
 
-    st.markdown(f"""
-    <div style="position:relative; width:450px; height:750px; margin:0 auto;">
-        <img src="{src}" style="width:100%; height:100%; display:block;">
-    </div>
+    components.html(f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=450, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <style>
+            * {{ margin:0; padding:0; box-sizing:border-box; }}
+            body {{ width:450px; height:750px; margin:0 auto; overflow:hidden; background:#1a73e8; }}
+            .container {{ position:relative; width:450px; height:750px; }}
+            img {{ width:100%; height:100%; display:block; }}
 
-    <style>
-    div[data-testid="stTextInput"] {{
-        position: fixed !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        top: 607px !important;
-        width: 282px !important;
-        z-index: 100 !important;
-        background: transparent !important;
-    }}
-    div[data-testid="stTextInput"] input {{
-        background: white !important;
-        border: 2px solid {border_color} !important;
-        border-radius: 8px !important;
-        text-align: center !important;
-        color: #191539 !important;
-        transition: border 0.2s ease !important;
-    }}
-    .warning-text {{
-        position: fixed !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        top: 656px !important;
-        width: 282px !important;
-        text-align: center !important;
-        font-size: 12px !important;
-        font-family: Arial, sans-serif !important;
-        color: #ff7a6c !important;
-        font-weight: bold !important;
-        z-index: 100 !important;
-        background: transparent !important;
-        pointer-events: none !important;
-        display: {'block' if st.session_state.input_error else 'none'} !important;
-    }}
-    div[data-testid="stButton"] {{
-        position: fixed !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        top: 694px !important;
-        width: 350px !important;
-        z-index: 100 !important;
-    }}
-    div[data-testid="stButton"] button {{
-        background: #1a1259 !important;
-        color: white !important;
-        font-weight: bold !important;
-        border: none !important;
-        border-radius: 8px !important;
-        height: 40px !important;
-    }}
-    div[data-testid="stButton"] button:hover {{
-        background: #2a1d7a !important;
-    }}
-    div[data-testid="stTextInput"] label {{
-        display: none !important;
-    }}
-    </style>
+            .input-box {{
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                top: 80.9%;
+                width: 62.7%;
+                z-index: 100;
+            }}
+            .input-box input {{
+                width: 100%;
+                height: 36px;
+                background: white;
+                border: 2px solid {border_color};
+                border-radius: 8px;
+                text-align: center;
+                color: #191539;
+                font-size: 15px;
+                font-family: Arial, sans-serif;
+                outline: none;
+                padding: 0 8px;
+            }}
 
-    <div id="warning-text" class="warning-text">⚠️ Por favor, digite seu nome!</div>
-    """, unsafe_allow_html=True)
+            .warning-text {{
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                top: 87.5%;
+                width: 62.7%;
+                text-align: center;
+                font-size: 12px;
+                font-family: Arial, sans-serif;
+                color: #ff7a6c;
+                font-weight: bold;
+                display: {warning_display};
+                pointer-events: none;
+            }}
 
-    name = st.text_input("nome", key="welcome_name", label_visibility="collapsed",
-                         placeholder="Digite seu nome", on_change=clear_warning)
+            .btn-continuar {{
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                top: 92.5%;
+                width: 77.7%;
+                height: 40px;
+                background: #1a1259;
+                color: white;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-family: Arial, sans-serif;
+                cursor: pointer;
+                z-index: 100;
+            }}
+            .btn-continuar:hover {{ background: #2a1d7a; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <img src="{src}">
 
-    if st.button("CONTINUAR", key="welcome_btn", use_container_width=True):
-        name_sem_digitos = ''.join(c for c in (name or '') if not c.isdigit()).strip()
-        if len(name_sem_digitos) >= 2:
-            st.session_state.user_name   = name.strip()
-            st.session_state.input_error = False
-            st.session_state.page        = "engenharia"
-            st.rerun()
-        else:
-            st.session_state.input_error = True
-            st.rerun()
+            <div class="input-box">
+                <input type="text" id="nameInput" placeholder="Digite seu nome" maxlength="50">
+            </div>
 
-    st.markdown("""
-    <script>
-        var input = document.querySelector('div[data-testid="stTextInput"] input');
-        if (input) {
-            input.addEventListener('focus', function() {
-                var warning = document.getElementById('warning-text');
-                if (warning) warning.style.display = 'none';
-            });
-        }
-        setTimeout(function() {
-            var inputField = document.querySelector('div[data-testid="stTextInput"] input');
-            if (inputField && inputField.style.border === '2px solid rgb(255, 122, 108)') {
-                inputField.style.border = '2px solid #1a73e8';
-                var warning = document.getElementById('warning-text');
-                if (warning) warning.style.display = 'none';
-            }
-        }, 1500);
-    </script>
-    """, unsafe_allow_html=True)
+            <div class="warning-text" id="warningText">⚠️ Por favor, digite seu nome!</div>
 
+            <button class="btn-continuar" id="btnContinuar">CONTINUAR</button>
+        </div>
 
-def clear_warning():
-    if st.session_state.input_error:
-        st.session_state.input_error = False
+        <script>
+            var input = document.getElementById('nameInput');
+            var warning = document.getElementById('warningText');
+            var btn = document.getElementById('btnContinuar');
+
+            input.addEventListener('focus', function() {{
+                warning.style.display = 'none';
+                input.style.border = '2px solid #1a73e8';
+            }});
+
+            btn.addEventListener('click', function() {{
+                var name = input.value.trim();
+                var semDigitos = name.replace(/[0-9]/g, '').trim();
+                if (semDigitos.length >= 2) {{
+                    warning.style.display = 'none';
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('action', 'go_engenharia:' + encodeURIComponent(name));
+                    window.top.location.href = url.toString();
+                }} else {{
+                    warning.style.display = 'block';
+                    input.style.border = '2px solid #ff7a6c';
+                }}
+            }});
+
+            input.addEventListener('keydown', function(e) {{
+                if (e.key === 'Enter') btn.click();
+            }});
+        </script>
+    </body>
+    </html>
+    """, height=750, width=450)
