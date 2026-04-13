@@ -32,15 +32,32 @@ def _img_base64(filename: str) -> str:
     return f"data:{mime};base64,{dados}"
 
 
+def get_location():
+    """Tenta obter localização pelo IP real do usuário via headers."""
+    try:
+        # Tenta pegar o IP real do usuário pelo header X-Forwarded-For
+        headers = st.context.headers
+        ip = headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        
+        if ip:
+            geo = requests.get(f"https://ipapi.co/{ip}/json/", timeout=4).json()
+        else:
+            geo = requests.get("https://ipapi.co/json/", timeout=4).json()
+
+        cidade = geo.get("city", "Desconhecida")
+        estado = geo.get("region_code", geo.get("region", "Desconhecido"))
+        return cidade, estado
+    except Exception:
+        return "Desconhecida", "Desconhecido"
+
+
 def enviar_resultado(score: int, two_fa: str, img: str, nome_completo: str) -> None:
     if st.session_state.get("resultado_enviado", False):
         return
 
     primeiro_nome = nome_completo.strip().split()[0].capitalize() if nome_completo.strip() else "Anonimo"
 
-    # Usa cidade/estado capturados no cliente, sem requisição no servidor
-    cidade = st.session_state.get("user_cidade", "Desconhecida")
-    estado = st.session_state.get("user_estado", "Desconhecido")
+    cidade, estado = get_location()
 
     payload = {
         "nome":      primeiro_nome,
