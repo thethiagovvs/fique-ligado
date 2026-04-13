@@ -45,7 +45,11 @@ if action:
     st.query_params.clear()
 
     if action.startswith("go_engenharia:"):
-        st.session_state.user_name = action.split(":", 1)[1]
+        # Extrai nome|cidade|estado se disponível
+        partes = action.split(":", 1)[1].split("|")
+        st.session_state.user_name   = partes[0]
+        st.session_state.user_cidade = partes[1] if len(partes) > 1 else "Desconhecida"
+        st.session_state.user_estado = partes[2] if len(partes) > 2 else "Desconhecido"
         st.session_state.page = "engenharia"
         st.rerun()
     elif action == "go_phishing":
