@@ -33,21 +33,22 @@ def _img_base64(filename: str) -> str:
 
 
 def get_location():
-    """Tenta obter localização pelo IP real do usuário via headers."""
     try:
-        # Tenta pegar o IP real do usuário pelo header X-Forwarded-For
         headers = st.context.headers
-        ip = headers.get("X-Forwarded-For", "").split(",")[0].strip()
-        
-        if ip:
+        ip = headers.get("X-Forwarded-For", "NAO_ENCONTRADO").split(",")[0].strip()
+        st.write(f"DEBUG IP: {ip}")
+
+        if ip and ip != "NAO_ENCONTRADO":
             geo = requests.get(f"https://ipapi.co/{ip}/json/", timeout=4).json()
         else:
             geo = requests.get("https://ipapi.co/json/", timeout=4).json()
 
+        st.write(f"DEBUG GEO: {geo}")
         cidade = geo.get("city", "Desconhecida")
         estado = geo.get("region_code", geo.get("region", "Desconhecido"))
         return cidade, estado
-    except Exception:
+    except Exception as e:
+        st.write(f"DEBUG ERRO: {e}")
         return "Desconhecida", "Desconhecido"
 
 
