@@ -38,13 +38,9 @@ def enviar_resultado(score: int, two_fa: str, img: str, nome_completo: str) -> N
 
     primeiro_nome = nome_completo.strip().split()[0].capitalize() if nome_completo.strip() else "Anonimo"
 
-    try:
-        geo    = requests.get("https://ipapi.co/json/", timeout=4).json()
-        cidade = geo.get("city", "Desconhecida")
-        estado = geo.get("region_code", geo.get("region", "Desconhecido"))
-    except Exception:
-        cidade = "Desconhecida"
-        estado = "Desconhecido"
+    # Usa cidade/estado capturados no cliente, sem requisição no servidor
+    cidade = st.session_state.get("user_cidade", "Desconhecida")
+    estado = st.session_state.get("user_estado", "Desconhecido")
 
     payload = {
         "nome":      primeiro_nome,
