@@ -11,18 +11,19 @@ def page_testemail() -> None:
 
   <div style="text-align:center;">
     <div style="font-size:3rem;margin-bottom:8px;">✉️</div>
-    <p style="font-size:22px;font-weight:800;color:#1a237e;margin:0 0 14px;letter-spacing:.5px;">
+    <p style="font-size:22px;font-weight:800;color:#1a237e;margin:0 0 16px;letter-spacing:.5px;">
       TESTE DE E-MAILS
-    </p>
-    <p class="body-text">
-      Você verá <strong>5 e-mails</strong> com dificuldade crescente.
-      Para cada um, indique se é legítimo ou golpe:
     </p>
   </div>
 
+  <p class="body-text" style="text-align:center;">
+    Agora é sua vez de colocar em prática o que foi abordado sobre
+    <strong><em>phishing</em></strong>.<br><br>
+    Analise <strong>5 e-mails</strong> e identifique se cada um é:
+  </p>
+
   <div class="spacer"></div>
 
-  <!-- Botões de referência visual -->
   <div style="display:flex;justify-content:center;gap:16px;margin:16px 0 0;">
     <div style="text-align:center;">
       <div style="background:#43a047;color:#fff;font-weight:700;font-size:14px;

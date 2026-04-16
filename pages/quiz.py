@@ -122,7 +122,7 @@ body { background:transparent; font-family:Arial,sans-serif; }
   .card{{
     background:#fff;border-radius:16px;overflow:hidden;
     display:flex;flex-direction:column;
-    min-height:560px;height:100%;
+    min-height:460px;height:100%;
   }}
   .header{{display:flex;align-items:center;justify-content:space-between;
     padding:10px 14px 8px;border-bottom:1px solid #e8e8e8;flex-shrink:0;}}
@@ -163,7 +163,7 @@ body { background:transparent; font-family:Arial,sans-serif; }
     <div class="link">🔗 {esc(item['link'])}</div>
   </div>
 </div>
-</body></html>""", height=560, scrolling=False)
+</body></html>""", height=460, scrolling=False)
 
     col1, col2 = st.columns(2)
     with col1:

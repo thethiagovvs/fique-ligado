@@ -11,8 +11,9 @@ def page_welcome() -> None:
     st.markdown("""
 <div class="card card-logo">
 
-  <h2 style="text-align:center;font-size:22px;font-weight:800;color:#1a237e;margin:0 0 16px;">
-    Olá! Seja bem-vindo(a).
+  <h2 style="text-align:center;font-size:22px;font-weight:800;color:#1a237e;
+             margin:0 0 16px;width:100%;">
+    Olá! Seja bem-vindo(a)
   </h2>
 
   <p class="body-text" style="text-align:center;">
