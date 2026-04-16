@@ -19,37 +19,38 @@ def iniciar_quiz():
 
 
 def page_qrcode() -> None:
-    st.markdown('<p class="page-title" style="font-size:22px;">📷 QR CODE</p>', unsafe_allow_html=True)
+    st.markdown('<p class="page-title" style="font-size:22px;font-weight:800;text-align:center;color:#fff;margin:8px 0 12px;">📷 QR Code</p>', unsafe_allow_html=True)
 
     st.markdown("""
-<div class="card card-content">
-  <p class="body-text" style="text-align:center;font-size:15px;margin-bottom:14px;">
+<div class="card">
+
+  <p class="body-text" style="text-align:center;">
     Você chegou até aqui por meio de um <strong>QR Code</strong>, não é mesmo?
   </p>
 
-  <div class="box-yellow" style="margin-bottom:14px;">
+  <div class="spacer"></div>
+
+  <div class="box-yellow">
     <p style="font-weight:700;text-align:center;margin:0 0 8px;font-size:15px;">⚠️ ATENÇÃO</p>
-    <p style="margin:0;font-size:14px;line-height:1.6;">
-      Embora esta aplicação seja <strong>segura</strong> e tenha um
-      <strong>propósito educativo</strong>, nem todo QR Code é confiável.
-      Em locais públicos, alguns podem ser alterados ou criados para aplicar
-      <strong>golpes</strong>. Ao escanear um código, você pode ser direcionado
-      para sites falsos, páginas de pagamento fraudulentas ou até iniciar o
-      download de arquivos maliciosos.
+    <p style="margin:0;font-size:14px;line-height:1.65;">
+      Embora esta aplicação seja <strong>segura</strong>, nem todo QR Code é confiável.
+      Em locais públicos, alguns podem ser alterados para aplicar <strong>golpes</strong>:
+      sites falsos, páginas de pagamento fraudulentas ou download de arquivos maliciosos.
     </p>
   </div>
 
+  <div class="spacer"></div>
+
   <p class="section-title">🤳 Como se proteger:</p>
-  <ul class="clean-list" style="margin-bottom:14px;">
-    <li>Evite escanear QR Codes de origem <strong>desconhecida ou suspeita</strong></li>
-    <li>Verifique o <strong>link exibido</strong> antes de prosseguir</li>
-    <li>Desconfie de QR Codes que oferecem benefícios exagerados, como <em>"Wi-Fi grátis"</em></li>
-    <li>Nunca informe <strong>dados pessoais ou bancários</strong> sem certeza da segurança</li>
+  <ul class="clean-list">
+    <li>Evite escanear QR Codes de origem desconhecida</li>
+    <li>Verifique o link exibido antes de prosseguir</li>
+    <li>Desconfie de promessas como <em>"Wi-Fi grátis"</em></li>
+    <li>Nunca informe dados pessoais ou bancários sem certeza</li>
   </ul>
 
-  <p class="body-text" style="text-align:center;font-size:13px;color:#888;">
-    Esta aplicação é segura. Continue para o teste prático!
-  </p>
+  <div class="spacer"></div>
+
 </div>
 """, unsafe_allow_html=True)
 

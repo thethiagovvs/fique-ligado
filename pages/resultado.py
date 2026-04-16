@@ -3,7 +3,7 @@ import requests
 from datetime import datetime
 from pages.utils import DEFAULTS, logo_html
 
-WEBHOOK_URL = st.secrets["WEBHOOK_URL"]
+WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwpnrMS3XP3YUVQkcK8C56ml7rdc-oUTUMKk5aLtWvVwKPrXLUN0k-gZar7KALVjMW2/exec"
 
 DOIS_FA_LABEL = {
     "nao":                 "Nao conhece",
@@ -32,21 +32,21 @@ VARIANTES = {
         "Você já utiliza a Autenticação de Dois Fatores, o que é <strong>excelente!</strong>",
         "Ainda dá para melhorar na identificação de e-mails falsos. "
         "Revise as dicas sobre remetentes suspeitos e links enganosos.",
-        "Para <strong>mais dicas</strong>, pegue um panfleto e comece sua jornada em segurança digital!"
+        "Para <strong>mais dicas</strong>, pegue um panfleto!"
     ),
     "estudar": (
         "📚", "HORA DE ESTUDAR,", "ESTUDAR",
         "Você identificou alguns golpes, mas ainda pode <strong>melhorar</strong>.",
         "Revise <strong>Phishing</strong> e <strong>Engenharia Social</strong>, "
         "ative o <strong>2FA</strong> e pratique identificar e-mails suspeitos.",
-        "Para <strong>mais dicas</strong>, pegue um panfleto e comece sua jornada em segurança digital!"
+        "Para <strong>mais dicas</strong>, pegue um panfleto!"
     ),
     "cuidado": (
         "⚠️", "CUIDADO,", "CUIDADO",
         "Você está <strong>vulnerável</strong> aos golpes digitais.",
         "Revise todo o conteúdo, ative a <strong>Autenticação de Dois Fatores</strong> "
         "urgentemente e nunca clique em links suspeitos.",
-        "Para <strong>mais dicas</strong>, pegue um panfleto e comece sua jornada em segurança digital!"
+        "Para <strong>mais dicas</strong>, pegue um panfleto!"
     ),
 }
 
@@ -94,25 +94,31 @@ def page_resultado() -> None:
 
     st.markdown(logo_html(), unsafe_allow_html=True)
 
-    nota_html = f'<p style="font-size:13px;color:#dce8ff;text-align:center;margin:6px 0 8px;line-height:1.5;">{nota}</p>' if nota else ""
+    nota_html = f'<p style="font-size:13px;color:#dce8ff;text-align:center;margin:4px 0 8px;line-height:1.5;">{nota}</p>' if nota else ""
 
     st.markdown(f"""
 <div class="card card-logo" style="text-align:center;">
+
   <div style="font-size:3rem;margin-bottom:6px;">{emoji}</div>
-  <p style="font-size:22px;font-weight:900;color:#1a237e;margin:0 0 6px;letter-spacing:.5px;">
+
+  <p style="font-size:22px;font-weight:900;color:#1a237e;margin:0 0 4px;letter-spacing:.5px;">
     {titulo}
   </p>
-  <p style="font-size:35px;font-weight:700;color:#1a73e8;margin:0 0 14px;">
+  <p style="font-size:35px;font-weight:900;color:#1a73e8;margin:0 0 14px;">
     {nome}
   </p>
+
   <p class="body-text">{msg1}</p>
   <p class="body-text">{msg2}</p>
 
+  <div class="spacer"></div>
+
   <p style="font-size:15px;font-weight:700;color:#1a237e;margin:14px 0 4px;">SEU PLACAR</p>
-  <p style="font-size:2.2rem;font-weight:900;color:#1a73e8;margin:0 0 8px;">
+  <p style="font-size:2.4rem;font-weight:900;color:#1a73e8;margin:0 0 8px;">
     {score}/5
   </p>
   <p style="font-size:13px;color:#888;margin:0;">Agradecemos sua participação!</p>
+
 </div>
 {nota_html}
 """, unsafe_allow_html=True)

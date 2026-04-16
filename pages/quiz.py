@@ -1,8 +1,18 @@
+import os, base64, time
 import streamlit as st
 import streamlit.components.v1 as components
 from pages.utils import esc
 
-GMAIL_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="28" height="28">
+
+def _gmail_logo_tag() -> str:
+    """Retorna uma tag <img> com o logo real do Gmail em base64, ou SVG fallback."""
+    path = os.path.join("imagens", "Gmail.png")
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+        return f'<img src="data:image/png;base64,{b64}" width="28" height="28" style="vertical-align:middle;">'
+    # Fallback SVG caso a imagem não esteja presente
+    return """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="28" height="28">
   <path fill="#EA4335" d="M6 40h6V23.8L4 18v18c0 2.2 1.8 4 4 4z"/>
   <path fill="#34A853" d="M36 40h6c2.2 0 4-1.8 4-4V18l-8 5.8z"/>
   <path fill="#FBBC05" d="M36 10l-12 8.7L12 10H6l18 13 18-13z"/>
@@ -32,70 +42,59 @@ def page_quiz() -> None:
         st.rerun()
         return
 
-    # ── POPUP SUCESSO com countdown 1.5s ──────────────────────────────────────
+    total = len(st.session_state.quiz_items)
+    is_last = st.session_state.quiz_index >= total - 1
+
+    # ── POPUP SUCESSO com countdown + avanço automático via time.sleep ───────
     if st.session_state.get("show_success_popup", False):
+        # Mostra o overlay visual (sem lógica JS de clique)
         components.html("""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                * { margin:0; padding:0; box-sizing:border-box; }
-                body { background:transparent; font-family:Arial,sans-serif; }
-                .overlay {
-                    position:fixed; top:0; left:0; width:100%; height:100%;
-                    background:rgba(0,0,0,0.7); display:flex;
-                    align-items:center; justify-content:center; z-index:9999;
-                }
-                .box {
-                    background:#fff; border-radius:16px; padding:32px 24px;
-                    max-width:320px; width:90%; text-align:center;
-                    box-shadow:0 8px 32px rgba(0,0,0,0.35);
-                }
-                .icon { font-size:3.5rem; margin-bottom:12px; }
-                .title { font-size:17px; font-weight:700; color:#1a237e; margin-bottom:6px; }
-                .text  { font-size:14px; color:#555; line-height:1.6; }
-                .bar-wrap { margin-top:16px; background:#e0e0e0; border-radius:8px; height:6px; overflow:hidden; }
-                .bar { height:6px; background:#43a047; border-radius:8px;
-                       width:100%; animation:shrink 1.5s linear forwards; }
-                @keyframes shrink { from{width:100%} to{width:0%} }
-            </style>
-        </head>
-        <body>
-            <div class="overlay">
-                <div class="box">
-                    <div class="icon">✅</div>
-                    <div class="title">Bom trabalho!</div>
-                    <div class="text">Você identificou corretamente este e-mail.</div>
-                    <div class="bar-wrap"><div class="bar"></div></div>
-                </div>
-            </div>
-            <script>
-                setTimeout(function() {
-                    var btns = window.parent.document.querySelectorAll('button');
-                    for (var i = 0; i < btns.length; i++) {
-                        if (btns[i].innerText.trim() === '__PROXIMA__') {
-                            btns[i].click();
-                            return;
-                        }
-                    }
-                }, 1500);
-            </script>
-        </body>
-        </html>
-        """, height=400)
+<!DOCTYPE html><html><head><style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:transparent; font-family:Arial,sans-serif; }
+.overlay {
+  position:fixed; top:0; left:0; width:100vw; height:100vh;
+  background:rgba(0,0,0,0.72); display:flex;
+  align-items:center; justify-content:center; z-index:9999;
+}
+.box {
+  background:#fff; border-radius:16px; padding:32px 24px;
+  max-width:320px; width:90%; text-align:center;
+  box-shadow:0 8px 32px rgba(0,0,0,0.35);
+}
+.icon  { font-size:3.5rem; margin-bottom:12px; }
+.title { font-size:17px; font-weight:700; color:#1a237e; margin-bottom:6px; }
+.text  { font-size:14px; color:#555; line-height:1.6; }
+.bar-wrap { margin-top:18px; background:#e0e0e0; border-radius:8px; height:7px; overflow:hidden; }
+.bar {
+  height:7px; background:#43a047; border-radius:8px;
+  width:100%; animation:shrink 1.5s linear forwards;
+}
+@keyframes shrink { from{width:100%} to{width:0%} }
+</style></head><body>
+<div class="overlay">
+  <div class="box">
+    <div class="icon">✅</div>
+    <div class="title">Bom trabalho!</div>
+    <div class="text">Você identificou corretamente este e-mail.</div>
+    <div class="bar-wrap"><div class="bar"></div></div>
+  </div>
+</div>
+</body></html>
+""", height=400)
 
-        if st.button("__PROXIMA__", key="btn_proxima"):
-            st.session_state.show_success_popup = False
-            st.session_state.quiz_index        += 1
-            st.rerun()
-        return
+        # Aguarda 1.5s no servidor e avança automaticamente — sem depender de JS
+        time.sleep(1.5)
+        st.session_state.show_success_popup = False
+        st.session_state.quiz_index        += 1
+        st.rerun()
 
-    # ── POPUP ERRO ─────────────────────────────────────────────────────────────
+    # ── POPUP ERRO ────────────────────────────────────────────────────────────
     if st.session_state.show_popup:
         expl = st.session_state.popup_explanation
         st.markdown(f"""
-<div class="card" style="text-align:center;padding:28px 22px;">
-  <div style="font-size:3.5rem;margin-bottom:10px;">❌</div>
+<div class="card" style="text-align:center;min-height:0;padding:28px 22px;">
+  <div style="font-size:3.5rem;margin-bottom:12px;">❌</div>
   <p class="body-text">{expl}</p>
 </div>
 """, unsafe_allow_html=True)
@@ -106,28 +105,32 @@ def page_quiz() -> None:
             st.rerun()
         return
 
-    # ── TELA PRINCIPAL ─────────────────────────────────────────────────────────
+    # ── TELA PRINCIPAL ────────────────────────────────────────────────────────
     item     = st.session_state.quiz_items[st.session_state.quiz_index]
-    total    = len(st.session_state.quiz_items)
     atual    = st.session_state.quiz_index + 1
     nome     = st.session_state.user_name
     corpo    = esc(item["corpo"].replace("[NOME]", nome))
     av_color = item.get("avatar_color", "#1a73e8")
     av_text  = item.get("avatar_text",  "?")
+    gmail_logo = _gmail_logo_tag()
 
     components.html(f"""<!DOCTYPE html><html><head>
 <meta charset="utf-8">
 <style>
   *{{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}}
-  body{{background:transparent;}}
-  .card{{background:#fff;border-radius:16px;overflow:hidden;}}
+  html,body{{background:transparent;height:100%;}}
+  .card{{
+    background:#fff;border-radius:16px;overflow:hidden;
+    display:flex;flex-direction:column;
+    min-height:560px;height:100%;
+  }}
   .header{{display:flex;align-items:center;justify-content:space-between;
-    padding:10px 14px 8px;border-bottom:1px solid #e8e8e8;}}
+    padding:10px 14px 8px;border-bottom:1px solid #e8e8e8;flex-shrink:0;}}
   .brand{{display:flex;align-items:center;gap:7px;}}
-  .gmail-txt{{font-size:1rem;color:#5f6368;font-weight:400;}}
+  .gmail-txt{{font-size:1rem;color:#5f6368;font-weight:500;}}
   .counter{{font-size:12px;color:#888;background:#f1f3f4;
     border-radius:12px;padding:3px 10px;}}
-  .meta{{padding:10px 14px 8px;border-bottom:1px solid #f0f0f0;}}
+  .meta{{padding:10px 14px 8px;border-bottom:1px solid #f0f0f0;flex-shrink:0;}}
   .sender{{display:flex;align-items:center;gap:8px;margin-bottom:5px;}}
   .avatar{{width:32px;height:32px;min-width:32px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
@@ -135,13 +138,14 @@ def page_quiz() -> None:
   .sname{{font-weight:700;font-size:12px;color:#202124;}}
   .sdate{{font-size:11px;color:#888;}}
   .subject{{font-weight:700;font-size:13px;color:#202124;}}
-  .body{{padding:10px 14px 14px;font-size:12px;color:#333;line-height:1.6;}}
-  .link{{margin-top:8px;font-size:11px;color:#1a73e8;word-break:break-all;}}
+  .body{{padding:12px 14px 14px;font-size:13px;color:#333;line-height:1.65;
+         flex:1;overflow:auto;}}
+  .link{{margin-top:10px;font-size:11px;color:#1a73e8;word-break:break-all;}}
 </style>
 </head><body>
 <div class="card">
   <div class="header">
-    <div class="brand">{GMAIL_SVG}<span class="gmail-txt">Gmail</span></div>
+    <div class="brand">{gmail_logo}<span class="gmail-txt">Gmail</span></div>
     <span class="counter">E-mail {atual} de {total}</span>
   </div>
   <div class="meta">
@@ -159,7 +163,7 @@ def page_quiz() -> None:
     <div class="link">🔗 {esc(item['link'])}</div>
   </div>
 </div>
-</body></html>""", height=340, scrolling=True)
+</body></html>""", height=560, scrolling=False)
 
     col1, col2 = st.columns(2)
     with col1:

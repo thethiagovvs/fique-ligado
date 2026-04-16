@@ -2,45 +2,46 @@ import streamlit as st
 
 
 def page_phishing() -> None:
-    st.markdown('<p class="page-title" style="font-size:22px;">🎣 PHISHING</p>', unsafe_allow_html=True)
+    st.markdown('<p class="page-title" style="font-size:22px;font-weight:800;text-align:center;color:#fff;margin:8px 0 12px;">🎣 PHISHING</p>', unsafe_allow_html=True)
 
     nome = st.session_state.get("user_name", "Usuário")
 
     st.markdown(f"""
-<div class="card card-content">
-  <p class="body-text" style="text-align:center;font-size:15px;margin-bottom:14px;">
-    <strong><em>Phishing</em></strong> é uma técnica de golpe em que criminosos enviam
-    e-mails ou mensagens fingindo ser empresas confiáveis. Em alguns casos,
-    os criminosos já possuem informações suas, isso é conhecido como
-    <strong><em>spear phishing</em></strong>, quando o golpe é
-    <strong>personalizado</strong> com dados reais para parecer mais convincente.
+<div class="card">
+
+  <p class="body-text" style="text-align:center;">
+    <strong><em>Phishing</em></strong> é quando criminosos fingem ser empresas
+    confiáveis para roubar seus dados. Quando usam seu nome real, chama-se
+    <strong><em>spear phishing</em></strong>.
   </p>
 
-  <p class="section-title" style="margin-top:10px;">Exemplo real:</p>
+  <p class="section-title">Exemplo real:</p>
   <div class="email-demo">
     <div class="email-field"><span>De:</span> seguranca@banco-seguro.com</div>
     <div class="email-field"><span>Assunto:</span> Conta bloqueada</div>
     <div class="email-body">
       Prezado(a) <strong>{nome}</strong>,<br>
-      Identificamos uma atividade suspeita em sua conta. Para evitar
-      o bloqueio, confirme seus dados imediatamente acessando o link abaixo:
+      Identificamos atividade suspeita. Confirme seus dados
+      acessando o link abaixo:
     </div>
-    <div class="email-link">http://www.linkfalso.com.biz</div>
+    <div class="email-link">www.linkfalso.com.biz</div>
   </div>
 
-  <p class="body-text" style="text-align:center;margin-top:10px;">
-    O simples fato de acessar esse link pode colocar você em risco. Seus dados
-    podem ser roubados, sua conta pode ser comprometida e até prejuízos
-    financeiros podem acontecer.
+  <p class="body-text" style="text-align:center;">
+    Acessar esse link pode resultar em <strong>roubo de dados</strong>
+    e prejuízos financeiros.
   </p>
 
-  <p class="section-title">🔍 Como identificar phishing:</p>
+  <div class="spacer"></div>
+
+  <p class="section-title">🔍 Como identificar:</p>
   <ul class="clean-list">
     <li>Verifique o <strong>domínio</strong> do e-mail</li>
     <li>Desconfie de mensagens com <strong>urgência</strong> excessiva</li>
-    <li>Evite clicar em <strong>links suspeitos</strong></li>
-    <li>Acesse o site digitando o endereço <strong>manualmente</strong></li>
+    <li>Nunca clique em links suspeitos</li>
+    <li>Acesse sites digitando o endereço manualmente</li>
   </ul>
+
 </div>
 """, unsafe_allow_html=True)
 
