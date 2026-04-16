@@ -10,8 +10,9 @@ def page_phishing() -> None:
 <div class="card">
 
   <p class="body-text" style="text-align:center;">
-    <strong><em>Phishing</em></strong> é quando criminosos fingem ser empresas
-    confiáveis para roubar seus dados. Quando usam seu nome real, chama-se
+    <strong><em>Phishing</em></strong> é um tipo de golpe em que criminosos enviam
+    e-mails ou mensagens fingindo ser empresas confiáveis para roubar seus dados.
+    Quando utilizam informações reais, como seu nome, o golpe é chamado de
     <strong><em>spear phishing</em></strong>.
   </p>
 
@@ -29,7 +30,7 @@ def page_phishing() -> None:
 
   <p class="body-text" style="text-align:center;">
     Acessar esse link pode resultar em <strong>roubo de dados</strong>
-    e prejuízos financeiros.
+    e até prejuízos financeiros.
   </p>
 
   <div class="spacer"></div>

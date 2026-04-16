@@ -19,7 +19,7 @@ def iniciar_quiz():
 
 
 def page_qrcode() -> None:
-    st.markdown('<p class="page-title" style="font-size:22px;font-weight:800;text-align:center;color:#fff;margin:8px 0 12px;">📷 QR Code</p>', unsafe_allow_html=True)
+    st.markdown('<p class="page-title" style="font-size:22px;font-weight:800;text-align:center;color:#fff;margin:8px 0 12px;">📷 QR CODE</p>', unsafe_allow_html=True)
 
     st.markdown("""
 <div class="card">
@@ -34,7 +34,7 @@ def page_qrcode() -> None:
     <p style="font-weight:700;text-align:center;margin:0 0 8px;font-size:15px;">⚠️ ATENÇÃO</p>
     <p style="margin:0;font-size:14px;line-height:1.65;">
       Embora esta aplicação seja <strong>segura</strong>, nem todo QR Code é confiável.
-      Em locais públicos, alguns podem ser alterados para aplicar <strong>golpes</strong>:
+      Em locais públicos, alguns podem ser alterados para aplicar <strong>golpes</strong>, como:
       sites falsos, páginas de pagamento fraudulentas ou download de arquivos maliciosos.
     </p>
   </div>

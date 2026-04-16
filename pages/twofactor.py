@@ -13,8 +13,8 @@ def page_twofactor() -> None:
 
   <p class="body-text" style="text-align:center;">
     A <strong>Autenticação de Dois Fatores</strong> adiciona uma segunda
-    verificação além da senha. Mesmo que alguém descubra sua senha,
-    não conseguirá entrar sozinho.
+    verificação além da senha. Essa confirmação extra pode ser feita por
+    meio de um código enviado por SMS, e-mail ou gerado em um aplicativo.
   </p>
 
   <div class="box-blue">
@@ -25,12 +25,13 @@ def page_twofactor() -> None:
   </div>
 
   <p class="body-text" style="text-align:center;margin-top:8px;">
-    Isso bloqueia a <strong>maioria dos ataques automatizados</strong>,
-    mesmo com senha comprometida.
+    Mesmo que alguém descubra sua senha, não conseguirá acessar sua conta
+    sem essa segunda etapa, o que bloqueia a <strong>maioria</strong> dos ataques automatizados
+    dos ataques automatizados, mesmo com senha comprometida.
   </p>
 
   <p style="font-size:15px;font-weight:700;color:#1a237e;text-align:center;margin:14px 0 4px;">
-    Você já conhece a Autenticação de Dois Fatores?
+    Você já conhecia a Autenticação de Dois Fatores?
   </p>
 
 </div>
@@ -41,7 +42,7 @@ def page_twofactor() -> None:
         st.session_state.page = "qrcode"
         st.rerun()
 
-    if st.button("❕  Sim, mas não utilizo", key="btn_conheco", use_container_width=True):
+    if st.button("⚠️  Sim, mas não utilizo", key="btn_conheco", use_container_width=True):
         st.session_state.two_factor_knowledge = "sim_conheco_nao_uso"
         st.session_state.page = "qrcode"
         st.rerun()

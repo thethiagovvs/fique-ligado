@@ -2,7 +2,7 @@ import streamlit as st
 
 
 def page_senhas() -> None:
-    st.markdown('<p class="page-title" style="font-size:22px;font-weight:800;text-align:center;color:#fff;margin:8px 0 12px;">🛡️ ENTROPIA DE SENHAS</p>', unsafe_allow_html=True)
+    st.markdown('<p class="page-title" style="font-size:22px;font-weight:800;text-align:center;color:#fff;margin:8px 0 12px;">🛡️ FORÇA DAS SENHAS</p>', unsafe_allow_html=True)
 
     st.markdown("""
 <div class="card">
