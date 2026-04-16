@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from pages.utils      import DEFAULTS, BASE_CSS
 from pages.welcome    import page_welcome
 from pages.engenharia import page_engenharia
@@ -18,6 +19,9 @@ st.set_page_config(
 )
 
 st.markdown(BASE_CSS, unsafe_allow_html=True)
+
+# Rola para o topo a cada rerun (troca de página)
+components.html("<script>window.parent.scrollTo({top:0,behavior:'instant'});</script>", height=0)
 
 for k, v in DEFAULTS.items():
     if k not in st.session_state:
