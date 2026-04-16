@@ -1,47 +1,51 @@
 import streamlit as st
-from pages.utils import img_src
 
 
 def page_senhas() -> None:
-    # Mostra a imagem
-    src = img_src("4-Entropia de Senhas.png")
-    
-    st.markdown(f"""
-    <div style="position:relative; width:450px; height:750px; margin:0 auto;">
-        <img src="{src}" style="width:100%; height:100%; display:block;">
+    st.markdown('<p class="page-title" style="font-size:22px;">🔑 ENTROPIA DE SENHAS</p>', unsafe_allow_html=True)
+
+    st.markdown("""
+<div class="card card-content">
+  <p class="body-text" style="text-align:center;font-size:15px;margin-bottom:14px;">
+    A senha é a <strong>principal</strong> proteção das suas contas.
+    Quanto mais longa e imprevisível ela for, mais <strong>difícil</strong>
+    será para um criminoso descobrir.
+  </p>
+
+  <div class="box-blue" style="margin-bottom:12px;">
+    <div class="stat-row">
+      <div class="stat-badge">66%</div>
+      <div class="stat-text">
+        Cerca de <strong>66% dos brasileiros</strong> utilizam a mesma senha
+        em diferentes serviços online. É como usar a mesma chave para todas
+        as portas da sua casa: se alguém tiver acesso a uma delas, poderá
+        acessar todas.
+      </div>
     </div>
-    """, unsafe_allow_html=True)
-    
-    # Botão CONTINUAR
+  </div>
+
+  <div class="box-blue" style="margin-bottom:14px;">
+    <div class="stat-row">
+      <div class="stat-badge">80%</div>
+      <div class="stat-text">
+        Cerca de <strong>80% das senhas criadas</strong> no Brasil são
+        consideradas fracas e fáceis de adivinhar, muitas delas baseadas
+        em dados pessoais como nome, data de nascimento ou nome de pets.
+      </div>
+    </div>
+  </div>
+
+  <p class="section-title">💡 Dicas para criar uma senha forte:</p>
+  <ul class="clean-list">
+    <li>Use senhas com <strong>12 a 16 caracteres</strong></li>
+    <li>Combine letras <strong>maiúsculas</strong> e <strong>minúsculas</strong></li>
+    <li>Inclua <strong>números</strong> e <strong>caracteres especiais</strong></li>
+    <li><strong>Não</strong> use informações pessoais</li>
+    <li><strong>Não</strong> reutilize a mesma senha</li>
+  </ul>
+</div>
+""", unsafe_allow_html=True)
+
     if st.button("CONTINUAR", key="btn_senhas", use_container_width=True):
         st.session_state.page = "twofactor"
         st.rerun()
-    
-    # CSS para posicionar o botão sobre a imagem
-    st.markdown("""
-    <style>
-    /* Posiciona o botão sobre a imagem */
-    div[data-testid="stButton"] {
-        position: fixed !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        top: 694px !important;
-        width: 350px !important;
-        z-index: 100 !important;
-    }
-    
-    div[data-testid="stButton"] button {
-        background: #1a1259 !important;
-        color: white !important;
-        font-weight: bold !important;
-        border: none !important;
-        border-radius: 8px !important;
-        height: 40px !important;
-        font-size: 16px !important;
-    }
-    
-    div[data-testid="stButton"] button:hover {
-        background: #2a1d7a !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)

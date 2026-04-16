@@ -1,20 +1,9 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import requests
-import base64
-import os
 from datetime import datetime
-from pages.utils import esc, DEFAULTS
+from pages.utils import DEFAULTS, logo_html
 
 WEBHOOK_URL = st.secrets["WEBHOOK_URL"]
-
-RESULTADO_LABEL = {
-    "9-EXPERT (5_5 + usa 2FA).png":           "EXPERT",
-    "10-BOM (4-5_5 + NÃO usa 2FA).png":       "BOM",
-    "11-ATENÇÃO (3-4_5 + usa 2FA).png":       "ATENCAO",
-    "12-ESTUDAR (3-4_5 + NÃO usa 2FA).png":   "ESTUDAR",
-    "13-CUIDADO (0-2_5 - qualquer 2FA).png":  "CUIDADO",
-}
 
 DOIS_FA_LABEL = {
     "nao":                 "Nao conhece",
@@ -22,56 +11,73 @@ DOIS_FA_LABEL = {
     "sim_utilizo":         "Utiliza",
 }
 
+VARIANTES = {
+    "expert": (
+        "🎉", "PARABÉNS,", "EXPERT",
+        "Você é um verdadeiro <strong>expert</strong> em segurança digital! "
+        "Acertou todos os golpes e já utiliza a Autenticação de Dois Fatores.",
+        "Continue assim e compartilhe com <strong>amigos</strong> e "
+        "<strong>familiares</strong>. Juntos tornamos a internet mais segura!",
+        ""
+    ),
+    "bom": (
+        "👍", "MANDOU BEM,", "BOM",
+        "Você tem <strong>ótima</strong> capacidade de identificar golpes por e-mail.",
+        "Que tal ativar a <strong>Autenticação de Dois Fatores</strong>? "
+        "Com ela você bloqueia <strong>99,9%</strong> dos ataques.",
+        ""
+    ),
+    "atencao": (
+        "💡", "BOM TRABALHO,", "ATENCAO",
+        "Você já utiliza a Autenticação de Dois Fatores, o que é <strong>excelente!</strong>",
+        "Ainda dá para melhorar na identificação de e-mails falsos. "
+        "Revise as dicas sobre remetentes suspeitos e links enganosos.",
+        "Para <strong>mais dicas</strong>, pegue um panfleto e comece sua jornada em segurança digital!"
+    ),
+    "estudar": (
+        "📚", "HORA DE ESTUDAR,", "ESTUDAR",
+        "Você identificou alguns golpes, mas ainda pode <strong>melhorar</strong>.",
+        "Revise <strong>Phishing</strong> e <strong>Engenharia Social</strong>, "
+        "ative o <strong>2FA</strong> e pratique identificar e-mails suspeitos.",
+        "Para <strong>mais dicas</strong>, pegue um panfleto e comece sua jornada em segurança digital!"
+    ),
+    "cuidado": (
+        "⚠️", "CUIDADO,", "CUIDADO",
+        "Você está <strong>vulnerável</strong> aos golpes digitais.",
+        "Revise todo o conteúdo, ative a <strong>Autenticação de Dois Fatores</strong> "
+        "urgentemente e nunca clique em links suspeitos.",
+        "Para <strong>mais dicas</strong>, pegue um panfleto e comece sua jornada em segurança digital!"
+    ),
+}
 
-def _img_base64(filename: str) -> str:
-    caminho = os.path.join("imagens", filename)
-    with open(caminho, "rb") as f:
-        dados = base64.b64encode(f.read()).decode()
-    ext = filename.rsplit(".", 1)[-1].lower()
-    mime = "image/png" if ext == "png" else "image/jpeg"
-    return f"data:{mime};base64,{dados}"
+
+def _variante(score: int, two_fa: str) -> str:
+    if score >= 5 and two_fa == "sim_utilizo":  return "expert"
+    if score >= 4 and two_fa != "sim_utilizo":  return "bom"
+    if score >= 3 and two_fa == "sim_utilizo":  return "atencao"
+    if score >= 3 and two_fa != "sim_utilizo":  return "estudar"
+    return "cuidado"
 
 
-def get_location():
-    try:
-        headers = st.context.headers
-        ip = headers.get("X-Forwarded-For", "NAO_ENCONTRADO").split(",")[0].strip()
-        st.write(f"DEBUG IP: {ip}")
-
-        if ip and ip != "NAO_ENCONTRADO":
-            geo = requests.get(f"https://ipapi.co/{ip}/json/", timeout=4).json()
-        else:
-            geo = requests.get("https://ipapi.co/json/", timeout=4).json()
-
-        st.write(f"DEBUG GEO: {geo}")
-        cidade = geo.get("city", "Desconhecida")
-        estado = geo.get("region_code", geo.get("region", "Desconhecido"))
-        return cidade, estado
-    except Exception as e:
-        st.write(f"DEBUG ERRO: {e}")
-        return "Desconhecida", "Desconhecido"
-
-
-def enviar_resultado(score: int, two_fa: str, img: str, nome_completo: str) -> None:
+def _enviar(score, two_fa, label, nome_completo):
     if st.session_state.get("resultado_enviado", False):
         return
-
-    primeiro_nome = nome_completo.strip().split()[0].capitalize() if nome_completo.strip() else "Anonimo"
-
-    cidade, estado = get_location()
-
-    payload = {
-        "nome":      primeiro_nome,
-        "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"),
-        "cidade":    cidade,
-        "estado":    estado,
-        "score":     f"{score}/5",
-        "dois_fa":   DOIS_FA_LABEL.get(two_fa, two_fa),
-        "resultado": RESULTADO_LABEL.get(img, img),
-    }
-
+    primeiro = nome_completo.strip().split()[0].capitalize() if nome_completo.strip() else "Anonimo"
     try:
-        requests.post(WEBHOOK_URL, json=payload, timeout=6)
+        geo    = requests.get("https://ipapi.co/json/", timeout=4).json()
+        cidade = geo.get("city", "Desconhecida")
+        estado = geo.get("region_code", "Desconhecido")
+    except Exception:
+        cidade = estado = "Desconhecido"
+    try:
+        requests.post(WEBHOOK_URL, json={
+            "nome": primeiro,
+            "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "cidade": cidade, "estado": estado,
+            "score": f"{score}/5",
+            "dois_fa":   DOIS_FA_LABEL.get(two_fa, two_fa),
+            "resultado": label,
+        }, timeout=6)
         st.session_state.resultado_enviado = True
     except Exception:
         pass
@@ -80,105 +86,45 @@ def enviar_resultado(score: int, two_fa: str, img: str, nome_completo: str) -> N
 def page_resultado() -> None:
     score  = st.session_state.quiz_score
     two_fa = st.session_state.two_factor_knowledge
+    nome   = st.session_state.user_name
+    key    = _variante(score, two_fa)
+    emoji, titulo, label, msg1, msg2, nota = VARIANTES[key]
 
-    if   score >= 5 and two_fa == "sim_utilizo":  img = "9-EXPERT (5_5 + usa 2FA).png"
-    elif score >= 4 and two_fa != "sim_utilizo":  img = "10-BOM (4-5_5 + NÃO usa 2FA).png"
-    elif score >= 3 and two_fa == "sim_utilizo":  img = "11-ATENÇÃO (3-4_5 + usa 2FA).png"
-    elif score >= 3 and two_fa != "sim_utilizo":  img = "12-ESTUDAR (3-4_5 + NÃO usa 2FA).png"
-    else:                                          img = "13-CUIDADO (0-2_5 - qualquer 2FA).png"
+    _enviar(score, two_fa, label, nome)
 
-    enviar_resultado(score, two_fa, img, st.session_state.user_name)
+    st.markdown(logo_html(), unsafe_allow_html=True)
 
-    nome      = esc(st.session_state.user_name)
-    score_txt = f"{score}/5"
-    src       = _img_base64(img)
+    nota_html = f'<p style="font-size:13px;color:#dce8ff;text-align:center;margin:6px 0 8px;line-height:1.5;">{nota}</p>' if nota else ""
 
-    components.html(f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <style>
-            * {{ margin:0; padding:0; box-sizing:border-box; }}
-            body {{ width:450px; height:750px; margin:0 auto; overflow:hidden; }}
-            .container {{ position:relative; width:450px; height:750px; }}
-            img {{ width:100%; height:100%; display:block; z-index:1; }}
-            .overlay-nome {{
-                position:absolute; left:77px; top:262px;
-                width:296px; height:33px;
-                display:flex; align-items:center; justify-content:center;
-                color:#191539; font-size:26px; font-weight:bold;
-                font-family:Arial,sans-serif;
-                overflow:hidden; white-space:nowrap; z-index:2;
-            }}
-            .overlay-score {{
-                position:absolute; left:146px; top:536px;
-                width:158px; height:33px;
-                display:flex; align-items:center; justify-content:center;
-                color:#191539; font-size:26px; font-weight:bold;
-                font-family:Arial,sans-serif; z-index:2;
-            }}
-            .btn {{
-                position:absolute; height:40px;
-                background:transparent; border:none;
-                cursor:pointer; z-index:10;
-            }}
-            #btnRefazer   {{ left:53px;  top:618px; width:154px; }}
-            #btnFinalizar {{ left:243px; top:618px; width:154px; }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <img src="{src}">
-            <div class="overlay-nome">{nome}</div>
-            <div class="overlay-score">{score_txt}</div>
-            <button id="btnRefazer"   class="btn"></button>
-            <button id="btnFinalizar" class="btn"></button>
-        </div>
-        <script>
-            function clickByText(text) {{
-                var buttons = window.parent.document.querySelectorAll('button');
-                for (var i = 0; i < buttons.length; i++) {{
-                    if (buttons[i].innerText.trim() === text) {{
-                        buttons[i].click();
-                        return;
-                    }}
-                }}
-            }}
-            document.getElementById('btnRefazer').onclick   = function() {{ clickByText('REFAZER');   }};
-            document.getElementById('btnFinalizar').onclick = function() {{ clickByText('FINALIZAR'); }};
-        </script>
-    </body>
-    </html>
-    """, height=750, width=450)
+    st.markdown(f"""
+<div class="card card-logo" style="text-align:center;">
+  <div style="font-size:3rem;margin-bottom:6px;">{emoji}</div>
+  <p style="font-size:22px;font-weight:900;color:#1a237e;margin:0 0 6px;letter-spacing:.5px;">
+    {titulo}
+  </p>
+  <p style="font-size:35px;font-weight:700;color:#1a73e8;margin:0 0 14px;">
+    {nome}
+  </p>
+  <p class="body-text">{msg1}</p>
+  <p class="body-text">{msg2}</p>
 
-    st.markdown("""
-    <style>
-    div[data-testid="stButton"][st-key="btn_refazer"],
-    div[data-testid="stButton"][st-key="btn_finalizar"] {
-        position: absolute !important;
-        top: -9999px !important;
-    }
-    .camuflar-botoes {
-        position: fixed !important;
-        bottom: -20px !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 200px !important;
-        background: #1a73e8 !important;
-        z-index: 99 !important;
-        pointer-events: none !important;
-    }
-    </style>
-    <div class="camuflar-botoes"></div>
-    """, unsafe_allow_html=True)
+  <p style="font-size:15px;font-weight:700;color:#1a237e;margin:14px 0 4px;">SEU PLACAR</p>
+  <p style="font-size:2.2rem;font-weight:900;color:#1a73e8;margin:0 0 8px;">
+    {score}/5
+  </p>
+  <p style="font-size:13px;color:#888;margin:0;">Agradecemos sua participação!</p>
+</div>
+{nota_html}
+""", unsafe_allow_html=True)
 
-    if st.button("REFAZER", key="btn_refazer"):
-        st.session_state.resultado_enviado = False
-        for k, v in DEFAULTS.items():
-            st.session_state[k] = v
-        st.rerun()
-
-    if st.button("FINALIZAR", key="btn_finalizar"):
-        st.session_state.page = "finalizado"
-        st.rerun()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("REFAZER", key="btn_refazer", use_container_width=True):
+            st.session_state.resultado_enviado = False
+            for k, v in DEFAULTS.items():
+                st.session_state[k] = v
+            st.rerun()
+    with col2:
+        if st.button("FINALIZAR", key="btn_finalizar", use_container_width=True):
+            st.session_state.page = "finalizado"
+            st.rerun()

@@ -1,87 +1,48 @@
 import streamlit as st
-from pages.utils import img_src
+from pages.utils import logo_html
 
 
 def page_welcome() -> None:
-    src = img_src("1-BOAS-VINDAS.png")
-
     if "input_error" not in st.session_state:
         st.session_state.input_error = False
 
-    border_color = '#ff7a6c' if st.session_state.input_error else '#1a73e8'
+    st.markdown(logo_html(), unsafe_allow_html=True)
 
-    st.markdown(f"""
-    <div style="position:relative; width:450px; height:750px; margin:0 auto;">
-        <img src="{src}" style="width:100%; height:100%; display:block;">
-    </div>
+    st.markdown("""
+<div class="card card-logo">
+  <h2 style="text-align:center;font-size:22px;font-weight:800;color:#1a237e;margin:0 0 16px;">
+    Olá! Seja bem-vindo(a).
+  </h2>
+  <p class="body-text" style="text-align:center;font-size:15px;margin-bottom:16px;">
+    Esta é uma ferramenta educativa desenvolvida por um
+    estudante de <strong>Segurança da Informação</strong>, com o objetivo
+    de orientar sobre os principais riscos digitais e oferecer
+    <strong>testes práticos</strong> que ajudam você a se preparar para os
+    desafios do dia a dia.
+  </p>
+  <p style="font-size:14px;color:#1565c0;text-align:center;line-height:1.7;margin:0 0 24px;">
+    Seu aprendizado é totalmente <strong>voluntário</strong>, e seus
+    resultados poderão ser utilizados para relatório de
+    atividade acadêmica.
+  </p>
+  <p class="body-text" style="font-size:15px;margin-bottom:8px;">
+    Antes de começarmos, como podemos te chamar?
+  </p>
+</div>
+""", unsafe_allow_html=True)
 
-    <style>
-    div[data-testid="stTextInput"] {{
-        position: fixed !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        top: 607px !important;
-        width: 282px !important;
-        z-index: 100 !important;
-        background: transparent !important;
-    }}
-    div[data-testid="stTextInput"] input {{
-        background: white !important;
-        border: 2px solid {border_color} !important;
-        border-radius: 8px !important;
-        text-align: center !important;
-        color: #191539 !important;
-        transition: border 0.2s ease !important;
-    }}
-    .warning-text {{
-        position: fixed !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        top: 656px !important;
-        width: 282px !important;
-        text-align: center !important;
-        font-size: 12px !important;
-        font-family: Arial, sans-serif !important;
-        color: #ff7a6c !important;
-        font-weight: bold !important;
-        z-index: 100 !important;
-        background: transparent !important;
-        pointer-events: none !important;
-        display: {'block' if st.session_state.input_error else 'none'} !important;
-    }}
-    div[data-testid="stButton"] {{
-        position: fixed !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        top: 694px !important;
-        width: 350px !important;
-        z-index: 100 !important;
-    }}
-    div[data-testid="stButton"] button {{
-        background: #1a1259 !important;
-        color: white !important;
-        font-weight: bold !important;
-        border: none !important;
-        border-radius: 8px !important;
-        height: 40px !important;
-    }}
-    div[data-testid="stButton"] button:hover {{
-        background: #2a1d7a !important;
-    }}
-    div[data-testid="stTextInput"] label {{
-        display: none !important;
-    }}
-    </style>
-
-    <div id="warning-text" class="warning-text">⚠️ Por favor, digite seu nome!</div>
-    """, unsafe_allow_html=True)
+    if st.session_state.input_error:
+        st.markdown('<p style="color:#e53935;font-size:13px;text-align:center;margin:2px 0 4px;">⚠️ Digite seu nome para continuar.</p>', unsafe_allow_html=True)
 
     name = st.text_input("nome", key="welcome_name", label_visibility="collapsed",
-                         placeholder="Digite seu nome", on_change=clear_warning)
+                         placeholder="Digite seu nome", on_change=_clear_error)
 
-    if st.button("CONTINUAR", key="welcome_btn", use_container_width=True):
-        name_sem_digitos = ''.join(c for c in (name or '') if not c.isdigit()).strip()
-        if len(name_sem_digitos) >= 2:
+    if st.session_state.input_error:
+        st.markdown('<style>div[data-testid="stTextInput"] input{border-color:#e53935 !important;}</style>', unsafe_allow_html=True)
+
+    if st.button("CONTINUAR", key="btn_welcome", use_container_width=True):
+        limpo = ''.join(c for c in (name or '') if not c.isdigit()).strip()
+        if len(limpo) >= 2:
             st.session_state.user_name   = name.strip()
             st.session_state.input_error = False
             st.session_state.page        = "engenharia"
@@ -90,27 +51,6 @@ def page_welcome() -> None:
             st.session_state.input_error = True
             st.rerun()
 
-    st.markdown("""
-    <script>
-        var input = document.querySelector('div[data-testid="stTextInput"] input');
-        if (input) {
-            input.addEventListener('focus', function() {
-                var warning = document.getElementById('warning-text');
-                if (warning) warning.style.display = 'none';
-            });
-        }
-        setTimeout(function() {
-            var inputField = document.querySelector('div[data-testid="stTextInput"] input');
-            if (inputField && inputField.style.border === '2px solid rgb(255, 122, 108)') {
-                inputField.style.border = '2px solid #1a73e8';
-                var warning = document.getElementById('warning-text');
-                if (warning) warning.style.display = 'none';
-            }
-        }, 1500);
-    </script>
-    """, unsafe_allow_html=True)
 
-
-def clear_warning():
-    if st.session_state.input_error:
-        st.session_state.input_error = False
+def _clear_error():
+    st.session_state.input_error = False

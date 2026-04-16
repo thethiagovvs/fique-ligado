@@ -1,11 +1,17 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from pages.utils import img_src, esc
+from pages.utils import esc
+
+GMAIL_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="28" height="28">
+  <path fill="#EA4335" d="M6 40h6V23.8L4 18v18c0 2.2 1.8 4 4 4z"/>
+  <path fill="#34A853" d="M36 40h6c2.2 0 4-1.8 4-4V18l-8 5.8z"/>
+  <path fill="#FBBC05" d="M36 10l-12 8.7L12 10H6l18 13 18-13z"/>
+  <path fill="#4285F4" d="M4 18l8 5.8V10H6c-2.2 0-4 1.8-4 4v4z"/>
+  <path fill="#EA4335" d="M44 14c0-2.2-1.8-4-4-4h-4v13.8L44 18v-4z"/>
+</svg>"""
 
 
 def handle_quiz_answer(resposta: bool) -> None:
-    if st.session_state.show_popup or st.session_state.get("show_success_popup", False):
-        return
     idx = st.session_state.quiz_index
     if idx >= len(st.session_state.quiz_items):
         return
@@ -13,7 +19,7 @@ def handle_quiz_answer(resposta: bool) -> None:
     correct = (resposta == item["verdadeiro"])
     st.session_state.quiz_answers.append({"email": item["titulo"], "correct": correct})
     if correct:
-        st.session_state.quiz_score += 1
+        st.session_state.quiz_score        += 1
         st.session_state.show_success_popup = True
     else:
         st.session_state.show_popup        = True
@@ -26,15 +32,7 @@ def page_quiz() -> None:
         st.rerun()
         return
 
-    item     = st.session_state.quiz_items[st.session_state.quiz_index]
-    nome     = st.session_state.user_name
-    corpo    = item["corpo"].replace("[NOME]", nome)
-    av_color = item.get("avatar_color", "#1a73e8")
-    av_text  = item.get("avatar_text",  "?")
-
-    src = img_src("8-Quiz.png")
-
-    # POPUP DE SUCESSO
+    # ── POPUP SUCESSO com countdown 1.5s ──────────────────────────────────────
     if st.session_state.get("show_success_popup", False):
         components.html("""
         <!DOCTYPE html>
@@ -42,42 +40,41 @@ def page_quiz() -> None:
         <head>
             <style>
                 * { margin:0; padding:0; box-sizing:border-box; }
-                body { width:450px; height:750px; margin:0 auto; background:transparent; }
-                .popup-overlay {
+                body { background:transparent; font-family:Arial,sans-serif; }
+                .overlay {
                     position:fixed; top:0; left:0; width:100%; height:100%;
-                    background:rgba(0,0,0,0.76); display:flex;
-                    align-items:center; justify-content:center; z-index:1000;
+                    background:rgba(0,0,0,0.7); display:flex;
+                    align-items:center; justify-content:center; z-index:9999;
                 }
-                .popup-box {
-                    background:#fff; border-radius:16px; padding:30px 24px;
-                    max-width:350px; min-width:280px; text-align:center;
-                    box-shadow:0 10px 40px rgba(0,0,0,0.45);
+                .box {
+                    background:#fff; border-radius:16px; padding:32px 24px;
+                    max-width:320px; width:90%; text-align:center;
+                    box-shadow:0 8px 32px rgba(0,0,0,0.35);
                 }
-                .popup-icon { font-size:48px; margin-bottom:14px; }
-                .popup-title {
-                    font-size:16px; color:#191539; font-family:Arial,sans-serif;
-                    font-weight:bold; margin-bottom:8px;
-                }
-                .popup-text {
-                    font-size:14px; color:#555; line-height:1.6;
-                    font-family:Arial,sans-serif;
-                }
+                .icon { font-size:3.5rem; margin-bottom:12px; }
+                .title { font-size:17px; font-weight:700; color:#1a237e; margin-bottom:6px; }
+                .text  { font-size:14px; color:#555; line-height:1.6; }
+                .bar-wrap { margin-top:16px; background:#e0e0e0; border-radius:8px; height:6px; overflow:hidden; }
+                .bar { height:6px; background:#43a047; border-radius:8px;
+                       width:100%; animation:shrink 1.5s linear forwards; }
+                @keyframes shrink { from{width:100%} to{width:0%} }
             </style>
         </head>
         <body>
-            <div class="popup-overlay">
-                <div class="popup-box">
-                    <div class="popup-icon">✅</div>
-                    <div class="popup-title">Bom trabalho!</div>
-                    <div class="popup-text">Você identificou corretamente este e-mail.</div>
+            <div class="overlay">
+                <div class="box">
+                    <div class="icon">✅</div>
+                    <div class="title">Bom trabalho!</div>
+                    <div class="text">Você identificou corretamente este e-mail.</div>
+                    <div class="bar-wrap"><div class="bar"></div></div>
                 </div>
             </div>
             <script>
                 setTimeout(function() {
-                    var buttons = window.parent.document.querySelectorAll('button');
-                    for (var i = 0; i < buttons.length; i++) {
-                        if (buttons[i].innerText.trim() === 'PROXIMA') {
-                            buttons[i].click();
+                    var btns = window.parent.document.querySelectorAll('button');
+                    for (var i = 0; i < btns.length; i++) {
+                        if (btns[i].innerText.trim() === '__PROXIMA__') {
+                            btns[i].click();
                             return;
                         }
                     }
@@ -85,210 +82,91 @@ def page_quiz() -> None:
             </script>
         </body>
         </html>
-        """, height=750, width=450)
+        """, height=400)
 
-        st.markdown("""
-        <style>
-        div[data-testid="stButton"][st-key="btn_proxima"] {
-            position: absolute !important;
-            top: -9999px !important;
-        }
-        .camuflar-botoes {
-            position: fixed !important;
-            bottom: -20px !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 200px !important;
-            background: #1a73e8 !important;
-            z-index: 99 !important;
-            pointer-events: none !important;
-        }
-        </style>
-        <div class="camuflar-botoes"></div>
-        """, unsafe_allow_html=True)
-
-        if st.button("PROXIMA", key="btn_proxima"):
+        if st.button("__PROXIMA__", key="btn_proxima"):
             st.session_state.show_success_popup = False
-            st.session_state.quiz_index += 1
+            st.session_state.quiz_index        += 1
             st.rerun()
         return
 
-    # POPUP DE ERRO
+    # ── POPUP ERRO ─────────────────────────────────────────────────────────────
     if st.session_state.show_popup:
-        expl = esc(st.session_state.popup_explanation)
-        components.html(f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                * {{ margin:0; padding:0; box-sizing:border-box; }}
-                body {{ width:450px; height:750px; margin:0 auto; background:transparent; }}
-                .popup-overlay {{
-                    position:fixed; top:0; left:0; width:100%; height:100%;
-                    background:rgba(0,0,0,0.76); display:flex;
-                    align-items:center; justify-content:center; z-index:1000;
-                }}
-                .popup-box {{
-                    background:#fff; border-radius:16px; padding:30px 24px;
-                    max-width:350px; text-align:center;
-                    box-shadow:0 10px 40px rgba(0,0,0,0.45);
-                }}
-                .popup-icon {{ font-size:48px; margin-bottom:14px; }}
-                .popup-text {{
-                    font-size:14px; color:#191539; line-height:1.6;
-                    margin-bottom:24px; font-family:Arial,sans-serif;
-                }}
-                .popup-button {{
-                    background:#1a1259; color:white; border:none;
-                    border-radius:8px; padding:12px 30px; font-size:15px;
-                    font-weight:bold; cursor:pointer; font-family:Arial,sans-serif;
-                }}
-                .popup-button:hover {{ background:#2a1d7a; }}
-            </style>
-        </head>
-        <body>
-            <div class="popup-overlay">
-                <div class="popup-box">
-                    <div class="popup-icon">❌</div>
-                    <div class="popup-text">{expl}</div>
-                    <button class="popup-button" id="closePopup">Continuar</button>
-                </div>
-            </div>
-            <script>
-                document.getElementById('closePopup').addEventListener('click', function() {{
-                    var buttons = window.parent.document.querySelectorAll('button');
-                    for (var i = 0; i < buttons.length; i++) {{
-                        if (buttons[i].innerText.trim() === 'CONTINUAR') {{
-                            buttons[i].click();
-                            return;
-                        }}
-                    }}
-                }});
-            </script>
-        </body>
-        </html>
-        """, height=750, width=450)
-
-        st.markdown("""
-        <style>
-        div[data-testid="stButton"][st-key="btn_continuar"] {
-            position: absolute !important;
-            top: -9999px !important;
-        }
-        .camuflar-botoes {
-            position: fixed !important;
-            bottom: -20px !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 200px !important;
-            background: #1a73e8 !important;
-            z-index: 99 !important;
-            pointer-events: none !important;
-        }
-        </style>
-        <div class="camuflar-botoes"></div>
-        """, unsafe_allow_html=True)
-
-        if st.button("CONTINUAR", key="btn_continuar"):
+        expl = st.session_state.popup_explanation
+        st.markdown(f"""
+<div class="card" style="text-align:center;padding:28px 22px;">
+  <div style="font-size:3.5rem;margin-bottom:10px;">❌</div>
+  <p class="body-text">{expl}</p>
+</div>
+""", unsafe_allow_html=True)
+        if st.button("CONTINUAR →", key="btn_continuar", use_container_width=True):
             st.session_state.show_popup        = False
             st.session_state.popup_explanation = ""
             st.session_state.quiz_index       += 1
             st.rerun()
         return
 
-    # TELA PRINCIPAL
-    components.html(f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <style>
-            * {{ margin:0; padding:0; box-sizing:border-box; }}
-            body {{ width:450px; height:750px; margin:0 auto; overflow:hidden; }}
-            .container {{ position:relative; width:450px; height:750px; }}
-            img {{ width:100%; height:100%; display:block; z-index:1; }}
-            .email-bg {{
-                position:absolute; left:12%; top:16.67%; width:76.22%; height:72.13%;
-                background:#d9d9d9; border-radius:10px; overflow:hidden; z-index:2;
-            }}
-            .email-content {{
-                position:absolute; left:17.56%; top:20%; width:65.11%; height:65.47%;
-                overflow:hidden; font-family:Arial,sans-serif; z-index:3;
-            }}
-            .avatar {{
-                width:32px; height:32px; min-width:32px; background:{av_color};
-                border-radius:50%; display:flex; align-items:center; justify-content:center;
-                color:#fff; font-weight:bold; font-size:14px;
-            }}
-            .btn {{
-                position:absolute; height:40px; background:transparent;
-                border:none; cursor:pointer; z-index:10;
-            }}
-            #btnV {{ left:53px; top:677px; width:154px; }}
-            #btnF {{ left:243px; top:677px; width:154px; }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <img src="{src}">
-            <div class="email-bg"></div>
-            <div class="email-content">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                    <div class="avatar">{av_text}</div>
-                    <div>
-                        <div style="font-weight:bold;font-size:12px;color:#191539;">{esc(item['remetente'])}</div>
-                        <div style="font-size:10px;color:#666;">{esc(item.get('data','Hoje'))}</div>
-                    </div>
-                </div>
-                <div style="font-weight:bold;font-size:12px;color:#191539;margin-bottom:8px;">{esc(item['titulo'])}</div>
-                <div style="font-size:11px;color:#333;line-height:1.45;margin-bottom:10px;">{esc(corpo)}</div>
-                <div style="font-size:10px;color:#1a73e8;word-break:break-all;">&#128279; {esc(item['link'])}</div>
-            </div>
-            <button id="btnV" class="btn"></button>
-            <button id="btnF" class="btn"></button>
-        </div>
-        <script>
-            function clickByText(text) {{
-                var buttons = window.parent.document.querySelectorAll('button');
-                for (var i = 0; i < buttons.length; i++) {{
-                    if (buttons[i].innerText.trim() === text) {{
-                        buttons[i].click();
-                        return;
-                    }}
-                }}
-            }}
-            document.getElementById('btnV').onclick = function() {{ clickByText('VERDADEIRO'); }};
-            document.getElementById('btnF').onclick = function() {{ clickByText('FALSO'); }};
-        </script>
-    </body>
-    </html>
-    """, height=750, width=450)
+    # ── TELA PRINCIPAL ─────────────────────────────────────────────────────────
+    item     = st.session_state.quiz_items[st.session_state.quiz_index]
+    total    = len(st.session_state.quiz_items)
+    atual    = st.session_state.quiz_index + 1
+    nome     = st.session_state.user_name
+    corpo    = esc(item["corpo"].replace("[NOME]", nome))
+    av_color = item.get("avatar_color", "#1a73e8")
+    av_text  = item.get("avatar_text",  "?")
 
-    st.markdown("""
-    <style>
-    div[data-testid="stButton"][st-key="btn_verd"],
-    div[data-testid="stButton"][st-key="btn_falso"] {
-        position: absolute !important;
-        top: -9999px !important;
-    }
-    .camuflar-botoes {
-        position: fixed !important;
-        bottom: -20px !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 200px !important;
-        background: #1a73e8 !important;
-        z-index: 99 !important;
-        pointer-events: none !important;
-    }
-    </style>
-    <div class="camuflar-botoes"></div>
-    """, unsafe_allow_html=True)
+    components.html(f"""<!DOCTYPE html><html><head>
+<meta charset="utf-8">
+<style>
+  *{{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}}
+  body{{background:transparent;}}
+  .card{{background:#fff;border-radius:16px;overflow:hidden;}}
+  .header{{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px 8px;border-bottom:1px solid #e8e8e8;}}
+  .brand{{display:flex;align-items:center;gap:7px;}}
+  .gmail-txt{{font-size:1rem;color:#5f6368;font-weight:400;}}
+  .counter{{font-size:12px;color:#888;background:#f1f3f4;
+    border-radius:12px;padding:3px 10px;}}
+  .meta{{padding:10px 14px 8px;border-bottom:1px solid #f0f0f0;}}
+  .sender{{display:flex;align-items:center;gap:8px;margin-bottom:5px;}}
+  .avatar{{width:32px;height:32px;min-width:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:{av_color};color:#fff;font-weight:700;font-size:.85rem;}}
+  .sname{{font-weight:700;font-size:12px;color:#202124;}}
+  .sdate{{font-size:11px;color:#888;}}
+  .subject{{font-weight:700;font-size:13px;color:#202124;}}
+  .body{{padding:10px 14px 14px;font-size:12px;color:#333;line-height:1.6;}}
+  .link{{margin-top:8px;font-size:11px;color:#1a73e8;word-break:break-all;}}
+</style>
+</head><body>
+<div class="card">
+  <div class="header">
+    <div class="brand">{GMAIL_SVG}<span class="gmail-txt">Gmail</span></div>
+    <span class="counter">E-mail {atual} de {total}</span>
+  </div>
+  <div class="meta">
+    <div class="sender">
+      <div class="avatar">{av_text}</div>
+      <div>
+        <div class="sname">{esc(item['remetente'])}</div>
+        <div class="sdate">{esc(item.get('data','Hoje'))}</div>
+      </div>
+    </div>
+    <div class="subject">{esc(item['titulo'])}</div>
+  </div>
+  <div class="body">
+    {corpo}
+    <div class="link">🔗 {esc(item['link'])}</div>
+  </div>
+</div>
+</body></html>""", height=340, scrolling=True)
 
-    if st.button("VERDADEIRO", key="btn_verd"):
-        handle_quiz_answer(True)
-        st.rerun()
-
-    if st.button("FALSO", key="btn_falso"):
-        handle_quiz_answer(False)
-        st.rerun()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("✅ VERDADEIRO", key="btn_verd", use_container_width=True):
+            handle_quiz_answer(True)
+            st.rerun()
+    with col2:
+        if st.button("❌ FALSO", key="btn_falso", use_container_width=True):
+            handle_quiz_answer(False)
+            st.rerun()
