@@ -61,6 +61,18 @@ def _variante(score: int, two_fa: str) -> str:
     return "cuidado"
 
 
+def _geo_por_ip(ip: str) -> tuple:
+    """Consulta ipapi.co com o IP real do usuário."""
+    try:
+        r = requests.get(f"https://ipapi.co/{ip}/json/", timeout=5)
+        d = r.json()
+        cidade = d.get("city", "Desconhecida")
+        estado = d.get("region", d.get("region_code", "Desconhecido"))
+        return cidade, estado
+    except Exception:
+        return "Desconhecida", "Desconhecido"
+
+
 def _enviar(score, two_fa, label, nome_completo, cidade, estado):
     if st.session_state.get("resultado_enviado", False):
         return
@@ -87,69 +99,67 @@ def page_resultado() -> None:
     key    = _variante(score, two_fa)
     emoji, titulo, label, msg1, msg2, nota = VARIANTES[key]
 
-    # ── Captura localização via browser se ainda não temos ────────────────────
+    # ── Passo 1: captura o IP real do usuário via JS ──────────────────────────
+    # O JS pede o IP ao ipify (sem permissão necessária) e redireciona com ?user_ip=
+    user_ip = unquote(st.query_params.get("user_ip", ""))
+
+    if user_ip:
+        # Chegou de volta com o IP — faz a consulta geo no servidor e salva
+        st.query_params.clear()
+        if not st.session_state.get("geo_cidade"):
+            cidade, estado = _geo_por_ip(user_ip)
+            st.session_state.geo_cidade = cidade
+            st.session_state.geo_estado = estado
+
     cidade = st.session_state.get("geo_cidade", "")
     estado = st.session_state.get("geo_estado", "")
 
-    # Lê coords vindas da URL (setadas pelo JS abaixo)
-    raw_cidade = unquote(st.query_params.get("geo_cidade", ""))
-    raw_estado = unquote(st.query_params.get("geo_estado", ""))
-    if raw_cidade and raw_estado:
-        st.session_state.geo_cidade = raw_cidade
-        st.session_state.geo_estado = raw_estado
-        cidade = raw_cidade
-        estado = raw_estado
-        st.query_params.clear()
-
-    # Se ainda não temos localização, injeta o JS que pede permissão ao navegador
+    # Se ainda não temos o IP, injeta JS silencioso para buscá-lo
     if not cidade:
         components.html("""
-<!DOCTYPE html><html><head><style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:Arial,sans-serif;background:transparent;}
-</style></head><body>
+<!DOCTYPE html><html><head></head><body>
 <script>
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    function(pos) {
-      var lat = pos.coords.latitude;
-      var lon = pos.coords.longitude;
-      // Reverse geocoding com Nominatim (OpenStreetMap) — gratuito, sem chave
-      fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon, {
-        headers: { 'Accept-Language': 'pt-BR,pt' }
-      })
+fetch('https://api.ipify.org?format=json')
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    var url = new URL(window.parent.location.href);
+    url.searchParams.set('user_ip', data.ip);
+    window.parent.location.href = url.toString();
+  })
+  .catch(function(){
+    // ipify falhou — tenta api64 como fallback
+    fetch('https://api64.ipify.org?format=json')
       .then(function(r){ return r.json(); })
-      .then(function(data) {
-        var addr  = data.address || {};
-        var city  = addr.city || addr.town || addr.village || addr.county || 'Desconhecida';
-        var state = addr.state || 'Desconhecido';
-        // Remove "Estado de " ou "Estado do " do início, se houver
-        state = state.replace(/^Estado d[eo] /i, '');
+      .then(function(data){
         var url = new URL(window.parent.location.href);
-        url.searchParams.set('geo_cidade', city);
-        url.searchParams.set('geo_estado', state);
+        url.searchParams.set('user_ip', data.ip);
         window.parent.location.href = url.toString();
       })
-      .catch(function() {
-        // Silently skip — não bloqueia a página
+      .catch(function(){
+        // Sem IP disponível — segue sem localização
+        var url = new URL(window.parent.location.href);
+        url.searchParams.set('user_ip', 'unknown');
+        window.parent.location.href = url.toString();
       });
-    },
-    function(err) {
-      // Usuário negou ou não disponível — segue sem localização
-    },
-    { timeout: 8000, maximumAge: 300000 }
-  );
-}
+  });
 </script>
 </body></html>
 """, height=0)
+        # Exibe a página enquanto aguarda o redirecionamento
+        cidade = "..."
+        estado = "..."
 
-    # Enquanto não tem localização, já renderiza a página normalmente
-    _enviar(score, two_fa, label, nome, cidade or "Desconhecida", estado or "Desconhecido")
+    # Envia para o webhook assim que tiver localização real
+    if cidade and cidade != "...":
+        _enviar(score, two_fa, label, nome, cidade, estado)
 
+    # ── Renderiza a página de resultado ──────────────────────────────────────
     st.markdown(logo_html(), unsafe_allow_html=True)
 
-    nota_html = f'<p style="font-size:13px;color:#dce8ff;text-align:center;margin:4px 0 8px;line-height:1.5;">{nota}</p>' if nota else ""
+    nota_html = (
+        f'<p style="font-size:13px;color:#dce8ff;text-align:center;'
+        f'margin:4px 0 8px;line-height:1.5;">{nota}</p>'
+    ) if nota else ""
 
     st.markdown(f"""
 <div class="card card-logo" style="text-align:center;">
