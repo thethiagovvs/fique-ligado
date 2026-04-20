@@ -1,7 +1,9 @@
 import streamlit as st
 import requests
+from urllib.parse import unquote
 from datetime import datetime
 from pages.utils import DEFAULTS, logo_html
+import streamlit.components.v1 as components
 
 WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwpnrMS3XP3YUVQkcK8C56ml7rdc-oUTUMKk5aLtWvVwKPrXLUN0k-gZar7KALVjMW2/exec"
 
@@ -59,22 +61,17 @@ def _variante(score: int, two_fa: str) -> str:
     return "cuidado"
 
 
-def _enviar(score, two_fa, label, nome_completo):
+def _enviar(score, two_fa, label, nome_completo, cidade, estado):
     if st.session_state.get("resultado_enviado", False):
         return
     primeiro = nome_completo.strip().split()[0].capitalize() if nome_completo.strip() else "Anonimo"
     try:
-        geo    = requests.get("https://ipapi.co/json/", timeout=4).json()
-        cidade = geo.get("city", "Desconhecida")
-        estado = geo.get("region_code", "Desconhecido")
-    except Exception:
-        cidade = estado = "Desconhecido"
-    try:
         requests.post(WEBHOOK_URL, json={
-            "nome": primeiro,
+            "nome":      primeiro,
             "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"),
-            "cidade": cidade, "estado": estado,
-            "score": f"{score}/5",
+            "cidade":    cidade,
+            "estado":    estado,
+            "score":     f"{score}/5",
             "dois_fa":   DOIS_FA_LABEL.get(two_fa, two_fa),
             "resultado": label,
         }, timeout=6)
@@ -90,7 +87,65 @@ def page_resultado() -> None:
     key    = _variante(score, two_fa)
     emoji, titulo, label, msg1, msg2, nota = VARIANTES[key]
 
-    _enviar(score, two_fa, label, nome)
+    # ── Captura localização via browser se ainda não temos ────────────────────
+    cidade = st.session_state.get("geo_cidade", "")
+    estado = st.session_state.get("geo_estado", "")
+
+    # Lê coords vindas da URL (setadas pelo JS abaixo)
+    raw_cidade = unquote(st.query_params.get("geo_cidade", ""))
+    raw_estado = unquote(st.query_params.get("geo_estado", ""))
+    if raw_cidade and raw_estado:
+        st.session_state.geo_cidade = raw_cidade
+        st.session_state.geo_estado = raw_estado
+        cidade = raw_cidade
+        estado = raw_estado
+        st.query_params.clear()
+
+    # Se ainda não temos localização, injeta o JS que pede permissão ao navegador
+    if not cidade:
+        components.html("""
+<!DOCTYPE html><html><head><style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:Arial,sans-serif;background:transparent;}
+</style></head><body>
+<script>
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      var lat = pos.coords.latitude;
+      var lon = pos.coords.longitude;
+      // Reverse geocoding com Nominatim (OpenStreetMap) — gratuito, sem chave
+      fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon, {
+        headers: { 'Accept-Language': 'pt-BR,pt' }
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var addr  = data.address || {};
+        var city  = addr.city || addr.town || addr.village || addr.county || 'Desconhecida';
+        var state = addr.state || 'Desconhecido';
+        // Remove "Estado de " ou "Estado do " do início, se houver
+        state = state.replace(/^Estado d[eo] /i, '');
+        var url = new URL(window.parent.location.href);
+        url.searchParams.set('geo_cidade', city);
+        url.searchParams.set('geo_estado', state);
+        window.parent.location.href = url.toString();
+      })
+      .catch(function() {
+        // Silently skip — não bloqueia a página
+      });
+    },
+    function(err) {
+      // Usuário negou ou não disponível — segue sem localização
+    },
+    { timeout: 8000, maximumAge: 300000 }
+  );
+}
+</script>
+</body></html>
+""", height=0)
+
+    # Enquanto não tem localização, já renderiza a página normalmente
+    _enviar(score, two_fa, label, nome, cidade or "Desconhecida", estado or "Desconhecido")
 
     st.markdown(logo_html(), unsafe_allow_html=True)
 
@@ -127,6 +182,8 @@ def page_resultado() -> None:
     with col1:
         if st.button("REFAZER", key="btn_refazer", use_container_width=True):
             st.session_state.resultado_enviado = False
+            st.session_state.pop("geo_cidade", None)
+            st.session_state.pop("geo_estado", None)
             for k, v in DEFAULTS.items():
                 st.session_state[k] = v
             st.rerun()
