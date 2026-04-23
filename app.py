@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from pages.utils      import DEFAULTS, BASE_CSS
 from pages.welcome    import page_welcome
 from pages.engenharia import page_engenharia
@@ -19,15 +20,32 @@ st.set_page_config(
 
 st.markdown(BASE_CSS, unsafe_allow_html=True)
 
-# Rola para o topo após o conteúdo renderizar
-st.markdown("""
+# Scroll para o topo — atinge window, parent e o container interno do Streamlit
+components.html("""
 <script>
-  setTimeout(function(){
-    window.scrollTo({top:0,behavior:'instant'});
-    window.parent.scrollTo({top:0,behavior:'instant'});
-  }, 50);
+  function scrollTop() {
+    try { window.scrollTo(0, 0); } catch(e) {}
+    try { window.parent.scrollTo(0, 0); } catch(e) {}
+    try {
+      var p = window.parent.document;
+      var targets = [
+        p.querySelector('[data-testid="stAppViewBlockContainer"]'),
+        p.querySelector('[data-testid="stAppViewContainer"]'),
+        p.querySelector('.main'),
+        p.querySelector('.block-container'),
+        p.documentElement,
+        p.body
+      ];
+      targets.forEach(function(el) {
+        if (el) { el.scrollTop = 0; el.scrollTo && el.scrollTo(0, 0); }
+      });
+    } catch(e) {}
+  }
+  scrollTop();
+  setTimeout(scrollTop, 80);
+  setTimeout(scrollTop, 200);
 </script>
-""", unsafe_allow_html=True)
+""", height=0)
 
 for k, v in DEFAULTS.items():
     if k not in st.session_state:
