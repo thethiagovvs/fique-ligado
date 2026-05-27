@@ -21,29 +21,25 @@ st.set_page_config(
 
 st.markdown(BASE_CSS, unsafe_allow_html=True)
 
+# Âncora invisível no topo — o JS faz scroll até ela a cada rerun
+st.markdown('<div id="topo-pagina"></div>', unsafe_allow_html=True)
+
 components.html("""
 <script>
-  function scrollTop() {
-    try { window.scrollTo(0, 0); } catch(e) {}
-    try { window.parent.scrollTo(0, 0); } catch(e) {}
+  function irAoTopo() {
     try {
-      var p = window.parent.document;
-      var targets = [
-        p.querySelector('[data-testid="stAppViewBlockContainer"]'),
-        p.querySelector('[data-testid="stAppViewContainer"]'),
-        p.querySelector('.main'),
-        p.querySelector('.block-container'),
-        p.documentElement,
-        p.body
-      ];
-      targets.forEach(function(el) {
-        if (el) { el.scrollTop = 0; el.scrollTo && el.scrollTo(0, 0); }
-      });
+      var ancora = window.parent.document.getElementById('topo-pagina');
+      if (ancora) {
+        ancora.scrollIntoView({ behavior: 'instant', block: 'start' });
+        return;
+      }
     } catch(e) {}
+    try { window.parent.scrollTo(0, 0); } catch(e) {}
+    try { window.scrollTo(0, 0); } catch(e) {}
   }
-  scrollTop();
-  setTimeout(scrollTop, 80);
-  setTimeout(scrollTop, 200);
+  irAoTopo();
+  setTimeout(irAoTopo, 100);
+  setTimeout(irAoTopo, 300);
 </script>
 """, height=0)
 
