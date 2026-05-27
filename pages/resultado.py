@@ -1,8 +1,6 @@
 import streamlit as st
 import requests
-from urllib.parse import unquote
 from datetime import datetime
-import streamlit.components.v1 as components
 from pages.utils import DEFAULTS, logo_html
 
 WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwpnrMS3XP3YUVQkcK8C56ml7rdc-oUTUMKk5aLtWvVwKPrXLUN0k-gZar7KALVjMW2/exec"
@@ -13,7 +11,7 @@ DOIS_FA_LABEL = {
     "sim_utilizo":         "Utiliza",
 }
 
-# (emoji, titulo, label_webhook, msg1, msg2, mostrar_botao_dicas)
+# (emoji, titulo, label_webhook, msg1, msg2, mostrar_dicas)
 VARIANTES = {
     "expert": (
         "🎉", "PARABÉNS,", "EXPERT",
@@ -62,19 +60,16 @@ def _variante(score: int, two_fa: str) -> str:
     return "cuidado"
 
 
-def _geo_por_ip(ip: str) -> tuple:
-    try:
-        r = requests.get(f"https://ipapi.co/{ip}/json/", timeout=5)
-        d = r.json()
-        return d.get("city", "Desconhecida"), d.get("region", "Desconhecido")
-    except Exception:
-        return "Desconhecida", "Desconhecido"
-
-
-def _enviar(score, two_fa, label, nome_completo, cidade, estado):
+def _enviar(score, two_fa, label, nome_completo):
     if st.session_state.get("resultado_enviado", False):
         return
     primeiro = nome_completo.strip().split()[0].capitalize() if nome_completo.strip() else "Anonimo"
+    try:
+        geo    = requests.get("https://ipapi.co/json/", timeout=4).json()
+        cidade = geo.get("city", "Desconhecida")
+        estado = geo.get("region", geo.get("region_code", "Desconhecido"))
+    except Exception:
+        cidade = estado = "Desconhecido"
     try:
         requests.post(WEBHOOK_URL, json={
             "nome":      primeiro,
@@ -97,58 +92,16 @@ def page_resultado() -> None:
     key    = _variante(score, two_fa)
     emoji, titulo, label, msg1, msg2, mostrar_dicas = VARIANTES[key]
 
-    # ── Geolocalização via IP real do usuário ─────────────────────────────────
-    user_ip = unquote(st.query_params.get("user_ip", ""))
-    if user_ip:
-        st.query_params.clear()
-        if not st.session_state.get("geo_cidade"):
-            cidade, estado = _geo_por_ip(user_ip)
-            st.session_state.geo_cidade = cidade
-            st.session_state.geo_estado = estado
+    # Envia imediatamente, sem depender de JS ou redirecionamento
+    _enviar(score, two_fa, label, nome)
 
-    cidade = st.session_state.get("geo_cidade", "")
-    estado = st.session_state.get("geo_estado", "")
-
-    if not cidade:
-        components.html("""
-<script>
-fetch('https://api.ipify.org?format=json')
-  .then(r => r.json())
-  .then(data => {
-    var url = new URL(window.parent.location.href);
-    url.searchParams.set('user_ip', data.ip);
-    window.parent.location.href = url.toString();
-  })
-  .catch(() => {
-    fetch('https://api64.ipify.org?format=json')
-      .then(r => r.json())
-      .then(data => {
-        var url = new URL(window.parent.location.href);
-        url.searchParams.set('user_ip', data.ip);
-        window.parent.location.href = url.toString();
-      })
-      .catch(() => {
-        var url = new URL(window.parent.location.href);
-        url.searchParams.set('user_ip', 'unknown');
-        window.parent.location.href = url.toString();
-      });
-  });
-</script>
-""", height=0)
-        cidade = "..."
-        estado = "..."
-
-    if cidade and cidade != "...":
-        _enviar(score, two_fa, label, nome, cidade, estado)
-
-    # ── CSS extra: botão VER DICAS ────────────────────────────────────────────
     st.markdown("""
 <style>
 div[data-testid="stButton"][st-key="btn_dicas"] > button {
-    background: #1565c0 !important;
+    background: #1976d2 !important;
 }
 div[data-testid="stButton"][st-key="btn_dicas"] > button:hover {
-    background: #0d47a1 !important;
+    background: #1565c0 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -190,8 +143,6 @@ div[data-testid="stButton"][st-key="btn_dicas"] > button:hover {
     with col1:
         if st.button("REFAZER", key="btn_refazer", use_container_width=True):
             st.session_state.resultado_enviado = False
-            st.session_state.pop("geo_cidade", None)
-            st.session_state.pop("geo_estado", None)
             for k, v in DEFAULTS.items():
                 st.session_state[k] = v
             st.rerun()
