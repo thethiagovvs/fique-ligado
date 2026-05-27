@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from pages.utils import logo_html
 
 
@@ -7,12 +8,13 @@ def page_welcome() -> None:
         st.session_state.input_error = False
 
     st.markdown(logo_html(), unsafe_allow_html=True)
+    components.html("""<script>setTimeout(function(){try{var a=window.parent.document.getElementById("topo-pagina");if(a){a.scrollIntoView({behavior:"instant",block:"start"});}else{window.parent.scrollTo(0,0);}}catch(e){try{window.scrollTo(0,0);}catch(e2){}}},300);</script>""", height=0)
+
 
     st.markdown("""
 <div class="card card-logo">
 
-  <h2 style="text-align:center;font-size:22px;font-weight:800;color:#1a237e;
-             margin:0 0 16px;width:100%;">
+  <h2 style="text-align:center;font-size:22px;font-weight:800;color:#1a237e;margin:0 0 16px;">
     Olá! Seja bem-vindo(a)
   </h2>
 

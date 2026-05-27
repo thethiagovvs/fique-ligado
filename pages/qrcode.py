@@ -1,5 +1,6 @@
 import random
 import streamlit as st
+import streamlit.components.v1 as components
 from quiz_data import QUIZ_ITEMS
 
 
@@ -20,6 +21,8 @@ def iniciar_quiz():
 
 def page_qrcode() -> None:
     st.markdown('<p class="page-title" style="font-size:22px;font-weight:800;text-align:center;color:#fff;margin:8px 0 12px;">📷 QR CODE</p>', unsafe_allow_html=True)
+    components.html("""<script>setTimeout(function(){try{var a=window.parent.document.getElementById("topo-pagina");if(a){a.scrollIntoView({behavior:"instant",block:"start"});}else{window.parent.scrollTo(0,0);}}catch(e){try{window.scrollTo(0,0);}catch(e2){}}},300);</script>""", height=0)
+
 
     st.markdown("""
 <div class="card">

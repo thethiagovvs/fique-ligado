@@ -98,6 +98,7 @@ body { background:transparent; font-family:Arial,sans-serif; }
   <p class="body-text">{expl}</p>
 </div>
 """, unsafe_allow_html=True)
+        components.html("""<script>setTimeout(function(){try{var a=window.parent.document.getElementById("topo-pagina");if(a){a.scrollIntoView({behavior:"instant",block:"start"});}else{window.parent.scrollTo(0,0);}}catch(e){try{window.scrollTo(0,0);}catch(e2){}}},300);</script>""", height=0)
         if st.button("CONTINUAR →", key="btn_continuar", use_container_width=True):
             st.session_state.show_popup        = False
             st.session_state.popup_explanation = ""
@@ -122,7 +123,7 @@ body { background:transparent; font-family:Arial,sans-serif; }
   .card{{
     background:#fff;border-radius:16px;overflow:hidden;
     display:flex;flex-direction:column;
-    min-height:460px;height:100%;
+    min-height:560px;height:100%;
   }}
   .header{{display:flex;align-items:center;justify-content:space-between;
     padding:10px 14px 8px;border-bottom:1px solid #e8e8e8;flex-shrink:0;}}
@@ -163,7 +164,8 @@ body { background:transparent; font-family:Arial,sans-serif; }
     <div class="link">🔗 {esc(item['link'])}</div>
   </div>
 </div>
-</body></html>""", height=460, scrolling=False)
+</body></html>""", height=560, scrolling=False)
+    components.html("""<script>setTimeout(function(){try{var a=window.parent.document.getElementById("topo-pagina");if(a){a.scrollIntoView({behavior:"instant",block:"start"});}else{window.parent.scrollTo(0,0);}}catch(e){try{window.scrollTo(0,0);}catch(e2){}}},300);</script>""", height=0)
 
     col1, col2 = st.columns(2)
     with col1:

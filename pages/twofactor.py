@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 def page_twofactor() -> None:
@@ -7,6 +8,8 @@ def page_twofactor() -> None:
   🔐 AUTENTICAÇÃO DE DOIS FATORES
 </p>
 """, unsafe_allow_html=True)
+    components.html("""<script>setTimeout(function(){try{var a=window.parent.document.getElementById("topo-pagina");if(a){a.scrollIntoView({behavior:"instant",block:"start"});}else{window.parent.scrollTo(0,0);}}catch(e){try{window.scrollTo(0,0);}catch(e2){}}},300);</script>""", height=0)
+
 
     st.markdown("""
 <div class="card">
