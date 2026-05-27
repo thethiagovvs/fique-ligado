@@ -10,6 +10,7 @@ from pages.qrcode     import page_qrcode
 from pages.testemail  import page_testemail
 from pages.quiz       import page_quiz
 from pages.resultado  import page_resultado
+from pages.dicas      import page_dicas
 
 st.set_page_config(
     page_title="Fique Ligado",
@@ -20,7 +21,6 @@ st.set_page_config(
 
 st.markdown(BASE_CSS, unsafe_allow_html=True)
 
-# Scroll para o topo — atinge window, parent e o container interno do Streamlit
 components.html("""
 <script>
   function scrollTop() {
@@ -61,6 +61,7 @@ elif p == "qrcode":     page_qrcode()
 elif p == "testemail":  page_testemail()
 elif p == "quiz":       page_quiz()
 elif p == "resultado":  page_resultado()
+elif p == "dicas":      page_dicas()
 elif p == "finalizado":
     st.balloons()
     st.stop()
