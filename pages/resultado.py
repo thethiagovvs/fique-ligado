@@ -1,5 +1,4 @@
 import streamlit as st
-import requests
 from datetime import datetime
 from pages.utils import DEFAULTS, logo_html
 
@@ -65,21 +64,19 @@ def _enviar(score, two_fa, label, nome_completo):
         return
     primeiro = nome_completo.strip().split()[0].capitalize() if nome_completo.strip() else "Anonimo"
     try:
-        geo    = requests.get("https://ipapi.co/json/", timeout=4).json()
-        cidade = geo.get("city", "Desconhecida")
-        estado = geo.get("region", geo.get("region_code", "Desconhecido"))
-    except Exception:
-        cidade = estado = "Desconhecido"
-    try:
-        requests.post(WEBHOOK_URL, json={
+        import urllib.request, json as _json
+        data = _json.dumps({
             "nome":      primeiro,
             "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"),
-            "cidade":    cidade,
-            "estado":    estado,
+            "cidade":    "",
+            "estado":    "",
             "score":     f"{score}/5",
             "dois_fa":   DOIS_FA_LABEL.get(two_fa, two_fa),
             "resultado": label,
-        }, timeout=6)
+        }).encode()
+        req = urllib.request.Request(WEBHOOK_URL, data=data,
+                                     headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(req, timeout=6)
         st.session_state.resultado_enviado = True
     except Exception:
         pass
