@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import requests
+import urllib.request
+import json
 from datetime import datetime
 from pages.utils import DEFAULTS, logo_html
 
@@ -12,6 +13,7 @@ DOIS_FA_LABEL = {
     "sim_utilizo":         "Utiliza",
 }
 
+# (emoji, titulo, label_webhook, msg1, msg2, mostrar_dicas)
 VARIANTES = {
     "expert": (
         "🎉", "PARABÉNS,", "EXPERT",
@@ -19,35 +21,35 @@ VARIANTES = {
         "Acertou todos os golpes e já utiliza a Autenticação de Dois Fatores.",
         "Continue assim e compartilhe com <strong>amigos</strong> e "
         "<strong>familiares</strong>. Juntos tornamos a internet mais segura!",
-        ""
+        False
     ),
     "bom": (
         "👍", "MANDOU BEM,", "BOM",
         "Você tem <strong>ótima</strong> capacidade de identificar golpes por e-mail.",
         "Que tal ativar a <strong>Autenticação de Dois Fatores</strong>? "
         "Com ela você bloqueia <strong>99,9%</strong> dos ataques.",
-        ""
+        True
     ),
     "atencao": (
         "💡", "BOM TRABALHO,", "ATENCAO",
         "Você já utiliza a Autenticação de Dois Fatores, o que é <strong>excelente!</strong>",
         "Ainda dá para melhorar na identificação de e-mails falsos. "
         "Revise as dicas sobre remetentes suspeitos e links enganosos.",
-        "Para <strong>mais dicas</strong>, pegue um panfleto!"
+        True
     ),
     "estudar": (
         "📚", "HORA DE ESTUDAR,", "ESTUDAR",
         "Você identificou alguns golpes, mas ainda pode <strong>melhorar</strong>.",
         "Revise <strong>Phishing</strong> e <strong>Engenharia Social</strong>, "
         "ative o <strong>2FA</strong> e pratique identificar e-mails suspeitos.",
-        "Para <strong>mais dicas</strong>, pegue um panfleto!"
+        True
     ),
     "cuidado": (
         "⚠️", "CUIDADO,", "CUIDADO",
         "Você está <strong>vulnerável</strong> aos golpes digitais.",
         "Revise todo o conteúdo, ative a <strong>Autenticação de Dois Fatores</strong> "
         "urgentemente e nunca clique em links suspeitos.",
-        "Para <strong>mais dicas</strong>, pegue um panfleto!"
+        True
     ),
 }
 
@@ -65,20 +67,20 @@ def _enviar(score, two_fa, label, nome_completo):
         return
     primeiro = nome_completo.strip().split()[0].capitalize() if nome_completo.strip() else "Anonimo"
     try:
-        geo    = requests.get("https://ipapi.co/json/", timeout=4).json()
-        cidade = geo.get("city", "Desconhecida")
-        estado = geo.get("region_code", "Desconhecido")
-    except Exception:
-        cidade = estado = "Desconhecido"
-    try:
-        requests.post(WEBHOOK_URL, json={
-            "nome": primeiro,
+        data = json.dumps({
+            "nome":      primeiro,
             "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"),
-            "cidade": cidade, "estado": estado,
-            "score": f"{score}/5",
+            "cidade":    "",
+            "estado":    "",
+            "score":     f"{score}/5",
             "dois_fa":   DOIS_FA_LABEL.get(two_fa, two_fa),
             "resultado": label,
-        }, timeout=6)
+        }).encode()
+        req = urllib.request.Request(
+            WEBHOOK_URL, data=data,
+            headers={"Content-Type": "application/json"}
+        )
+        urllib.request.urlopen(req, timeout=6)
         st.session_state.resultado_enviado = True
     except Exception:
         pass
@@ -89,15 +91,22 @@ def page_resultado() -> None:
     two_fa = st.session_state.two_factor_knowledge
     nome   = st.session_state.user_name
     key    = _variante(score, two_fa)
-    emoji, titulo, label, msg1, msg2, nota = VARIANTES[key]
+    emoji, titulo, label, msg1, msg2, mostrar_dicas = VARIANTES[key]
 
     _enviar(score, two_fa, label, nome)
 
+    st.markdown("""
+<style>
+div[data-testid="stButton"][st-key="btn_dicas"] > button {
+    background: #1976d2 !important;
+}
+div[data-testid="stButton"][st-key="btn_dicas"] > button:hover {
+    background: #1565c0 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
     st.markdown(logo_html(), unsafe_allow_html=True)
-    components.html("""<script>setTimeout(function(){try{var a=window.parent.document.getElementById("topo-pagina");if(a){a.scrollIntoView({behavior:"instant",block:"start"});}else{window.parent.scrollTo(0,0);}}catch(e){try{window.scrollTo(0,0);}catch(e2){}}},300);</script>""", height=0)
-
-
-    nota_html = f'<p style="font-size:13px;color:#dce8ff;text-align:center;margin:4px 0 8px;line-height:1.5;">{nota}</p>' if nota else ""
 
     st.markdown(f"""
 <div class="card card-logo" style="text-align:center;">
@@ -123,8 +132,12 @@ def page_resultado() -> None:
   <p style="font-size:13px;color:#888;margin:0;">Agradecemos sua participação!</p>
 
 </div>
-{nota_html}
 """, unsafe_allow_html=True)
+
+    if mostrar_dicas:
+        if st.button("📚 VER DICAS DE SEGURANÇA", key="btn_dicas", use_container_width=True):
+            st.session_state.page = "dicas"
+            st.rerun()
 
     col1, col2 = st.columns(2)
     with col1:
@@ -137,3 +150,33 @@ def page_resultado() -> None:
         if st.button("FINALIZAR", key="btn_finalizar", use_container_width=True):
             st.session_state.page = "finalizado"
             st.rerun()
+
+    components.html("""
+<script>
+(function() {
+  var selectors = [
+    'section.main',
+    '[data-testid="stAppViewContainer"]',
+    '[data-testid="stAppViewBlockContainer"]',
+    '.main .block-container',
+    '.main',
+    'section[tabindex="0"]'
+  ];
+  function tentar() {
+    var p = window.parent.document;
+    for (var i = 0; i < selectors.length; i++) {
+      var el = p.querySelector(selectors[i]);
+      if (el && el.scrollHeight > el.clientHeight) {
+        el.scrollTop = 0;
+      }
+    }
+    try { window.parent.scrollTo(0, 0); } catch(e) {}
+    try { p.documentElement.scrollTop = 0; } catch(e) {}
+    try { p.body.scrollTop = 0; } catch(e) {}
+  }
+  tentar();
+  setTimeout(tentar, 150);
+  setTimeout(tentar, 500);
+})();
+</script>
+""", height=0)
