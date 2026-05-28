@@ -4,8 +4,6 @@ import streamlit.components.v1 as components
 
 def page_engenharia() -> None:
     st.markdown('<p class="page-title" style="font-size:22px;font-weight:800;text-align:center;color:#fff;margin:8px 0 12px;">🎭 ENGENHARIA SOCIAL</p>', unsafe_allow_html=True)
-    components.html("""<script>setTimeout(function(){try{var a=window.parent.document.getElementById("topo-pagina");if(a){a.scrollIntoView({behavior:"instant",block:"start"});}else{window.parent.scrollTo(0,0);}}catch(e){try{window.scrollTo(0,0);}catch(e2){}}},300);</script>""", height=0)
-
 
     st.markdown("""
 <div class="card">
@@ -44,3 +42,36 @@ def page_engenharia() -> None:
     if st.button("CONTINUAR", key="btn_eng", use_container_width=True):
         st.session_state.page = "phishing"
         st.rerun()
+
+    # Tenta todos os containers conhecidos do Streamlit para scroll no mobile
+    components.html("""
+<script>
+(function() {
+  var selectors = [
+    'section.main',
+    '[data-testid="stAppViewContainer"]',
+    '[data-testid="stAppViewBlockContainer"]',
+    '.main .block-container',
+    '.main',
+    'section[tabindex="0"]'
+  ];
+  function tentar() {
+    var p = window.parent.document;
+    // Tenta cada seletor
+    for (var i = 0; i < selectors.length; i++) {
+      var el = p.querySelector(selectors[i]);
+      if (el && el.scrollHeight > el.clientHeight) {
+        el.scrollTop = 0;
+      }
+    }
+    // Fallbacks gerais
+    try { window.parent.scrollTo(0, 0); } catch(e) {}
+    try { p.documentElement.scrollTop = 0; } catch(e) {}
+    try { p.body.scrollTop = 0; } catch(e) {}
+  }
+  tentar();
+  setTimeout(tentar, 150);
+  setTimeout(tentar, 500);
+})();
+</script>
+""", height=0)
