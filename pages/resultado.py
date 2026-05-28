@@ -1,7 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import urllib.request
-import json
+import requests
 from datetime import datetime
 from pages.utils import DEFAULTS, logo_html
 
@@ -67,7 +66,7 @@ def _enviar(score, two_fa, label, nome_completo):
         return
     primeiro = nome_completo.strip().split()[0].capitalize() if nome_completo.strip() else "Anonimo"
     try:
-        data = json.dumps({
+        requests.post(WEBHOOK_URL, json={
             "nome":      primeiro,
             "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"),
             "cidade":    "",
@@ -75,12 +74,7 @@ def _enviar(score, two_fa, label, nome_completo):
             "score":     f"{score}/5",
             "dois_fa":   DOIS_FA_LABEL.get(two_fa, two_fa),
             "resultado": label,
-        }).encode()
-        req = urllib.request.Request(
-            WEBHOOK_URL, data=data,
-            headers={"Content-Type": "application/json"}
-        )
-        urllib.request.urlopen(req, timeout=6)
+        }, timeout=6)
         st.session_state.resultado_enviado = True
     except Exception:
         pass
