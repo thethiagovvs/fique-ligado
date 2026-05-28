@@ -74,7 +74,7 @@ def _enviar(score, two_fa, label, nome_completo):
             "score":     f"{score}/5",
             "dois_fa":   DOIS_FA_LABEL.get(two_fa, two_fa),
             "resultado": label,
-        }, timeout=6)
+        }, timeout=6, allow_redirects=True)
         st.session_state.resultado_enviado = True
     except Exception:
         pass
